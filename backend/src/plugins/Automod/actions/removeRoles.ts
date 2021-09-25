@@ -66,11 +66,12 @@ export const RemoveRolesAction = automodAction({
         }
 
         const memberRoleLock = await pluginData.locks.acquire(memberRolesLock(member));
-
         const rolesArr = Array.from(memberRoles.values());
-        await member.edit({
+        console.log("removeRoles success", "new roles:", rolesArr, "oldRoles: ", [...memberRoles.keys()]);
+        await member.roles.remove(rolesWeCannotRemove);
+        /*await member.edit({
           roles: rolesArr,
-        });
+        });*/
 
         memberRoleLock.unlock();
       }),
