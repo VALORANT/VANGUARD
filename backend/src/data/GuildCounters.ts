@@ -288,8 +288,8 @@ export class GuildCounters extends BaseGuildRepository {
 
       return (await entityManager.findOne(CounterTrigger, {
         where: {
-          id: insertResult.identifiers[0].id
-        }
+          id: insertResult.identifiers[0].id,
+        },
       }))!;
     });
   }

@@ -1,13 +1,13 @@
+import { GuildMember } from "discord.js";
+import { GuildPluginData } from "knub";
 import { MuteTypes } from "../../../data/MuteTypes";
 import { Mute } from "../../../data/entities/Mute";
+import { clearExpiringMute } from "../../../data/loops/expiringMutesLoop";
 import { resolveMember, verboseUserMention } from "../../../utils";
 import { memberRolesLock } from "../../../utils/lockNameHelpers";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
-import { GuildPluginData } from "knub";
 import { RoleManagerPlugin } from "../../RoleManager/RoleManagerPlugin";
 import { MutesPluginType } from "../types";
-import { clearExpiringMute } from "../../../data/loops/expiringMutesLoop";
-import { GuildMember } from "discord.js";
 
 export async function clearMute(
   pluginData: GuildPluginData<MutesPluginType>,
@@ -57,9 +57,10 @@ export async function clearMute(
           await member.timeout(null);
         }
       }
+      pluginData.getPlugin(LogsPlugin).logMemberMuteExpired({ member });
     } catch {
       pluginData.getPlugin(LogsPlugin).logBotAlert({
-        body: `Failed to remove mute role from ${verboseUserMention(member.user)}`,
+        body: `Failed to clear mute from ${verboseUserMention(member.user)}`,
       });
     } finally {
       lock.unlock();
