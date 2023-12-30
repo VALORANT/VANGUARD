@@ -6,6 +6,7 @@ import { canActOn, hasPermission, sendErrorMessage, sendSuccessMessage } from ".
 import { DAYS, MINUTES, resolveMember, resolveUser } from "../../../utils";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -64,6 +65,11 @@ export const ForcebanCmd = modActionsCmd({
 
       mod = args.mod;
     }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+      return;
+    }
+
     const config = pluginData.config.get();
     const reason = parseReason(config, formatReasonWithMessageLinkForAttachments(args.reason, msg));
     const reasonWithAttachments = parseReason(

@@ -49,6 +49,7 @@ export const ConfigSchema = t.type({
   reason_aliases: tNullable(t.record(t.string, t.string)),
   embed_colour: t.number,
   embed_color: t.number,
+  attachment_link_reaction: tNullable(t.union([t.literal("none"), t.literal("warn"), t.literal("restrict")])),
 });
 export type TConfigSchema = t.TypeOf<typeof ConfigSchema>;
 

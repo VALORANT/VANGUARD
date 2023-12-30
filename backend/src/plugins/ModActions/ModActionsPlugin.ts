@@ -51,6 +51,8 @@ import { updateCase } from "./functions/updateCase";
 import { warnMember } from "./functions/warnMember";
 import { BanOptions, ConfigSchema, KickOptions, ModActionsPluginType, WarnOptions } from "./types";
 
+type AttachmentLinkReactionType = "none" | "warn" | "restrict" | null | undefined;
+
 const defaultOptions = {
   config: {
     dm_on_warn: true,
@@ -92,6 +94,7 @@ const defaultOptions = {
     reason_aliases: {},
     embed_colour: 0x2b2d31,
     embed_color: 0x2b2d31,
+    attachment_link_reaction: "warn" as AttachmentLinkReactionType,
   },
   overrides: [
     {

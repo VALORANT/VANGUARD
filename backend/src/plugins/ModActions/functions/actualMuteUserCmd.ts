@@ -8,6 +8,7 @@ import { UnknownUser, asSingleLine, isDiscordAPIError, renderUsername } from "..
 import { MutesPlugin } from "../../Mutes/MutesPlugin";
 import { MuteResult } from "../../Mutes/types";
 import { ModActionsPluginType } from "../types";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "./detectAttachmentLink";
 import { formatReasonWithAttachments, formatReasonWithMessageLinkForAttachments } from "./formatReasonForAttachments";
 import { parseReason } from "./parseReason";
 import { readContactMethodsFromArgs } from "./readContactMethodsFromArgs";
@@ -40,6 +41,10 @@ export async function actualMuteUserCmd(
 
     mod = args.mod;
     pp = msg.author;
+  }
+
+  if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+    return;
   }
 
   const timeUntilUnmute = args.time && humanizeDuration(args.time);

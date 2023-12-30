@@ -5,6 +5,7 @@ import { canActOn, hasPermission, sendErrorMessage, sendSuccessMessage } from ".
 import { errorMessage, renderUsername, resolveMember, resolveUser } from "../../../utils";
 import { waitForButtonConfirm } from "../../../utils/waitForInteraction";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -62,6 +63,10 @@ export const WarnCmd = modActionsCmd({
       }
 
       mod = args.mod;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+      return;
     }
 
     const config = pluginData.config.get();

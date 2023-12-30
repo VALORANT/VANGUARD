@@ -11,6 +11,7 @@ import { MINUTES, noop, notifyUser, resolveMember } from "../../../utils";
 import { userToTemplateSafeUser } from "../../../utils/templateSafeObjects";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -42,6 +43,10 @@ export const MasskickCmd = modActionsCmd({
     const kickReasonReply = await waitForReply(pluginData.client, msg.channel, msg.author.id);
     if (!kickReasonReply || !kickReasonReply.content || kickReasonReply.content.toLowerCase().trim() === "cancel") {
       sendErrorMessage(pluginData, msg.channel, "Cancelled");
+      return;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, kickReasonReply.content)) {
       return;
     }
 

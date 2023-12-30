@@ -6,6 +6,7 @@ import { logger } from "../../../logger";
 import { canActOn, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
 import { MutesPlugin } from "../../Mutes/MutesPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -40,6 +41,10 @@ export const MassmuteCmd = modActionsCmd({
       muteReasonReceived.content.toLowerCase().trim() === "cancel"
     ) {
       sendErrorMessage(pluginData, msg.channel, "Cancelled");
+      return;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, muteReasonReceived.content)) {
       return;
     }
 

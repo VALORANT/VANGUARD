@@ -5,6 +5,7 @@ import { hasPermission, sendErrorMessage, sendSuccessMessage } from "../../../pl
 import { MutesPlugin } from "../../../plugins/Mutes/MutesPlugin";
 import { UnknownUser, asSingleLine, renderUsername } from "../../../utils";
 import { ModActionsPluginType } from "../types";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "./detectAttachmentLink";
 import { formatReasonWithMessageLinkForAttachments } from "./formatReasonForAttachments";
 import { parseReason } from "./parseReason";
 
@@ -26,6 +27,10 @@ export async function actualUnmuteCmd(
 
     mod = args.mod.user;
     pp = msg.author;
+  }
+
+  if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+    return;
   }
 
   const config = pluginData.config.get();

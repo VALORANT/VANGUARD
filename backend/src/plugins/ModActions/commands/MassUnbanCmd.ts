@@ -7,6 +7,7 @@ import { sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { MINUTES, resolveUser } from "../../../utils";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import { formatReasonWithMessageLinkForAttachments } from "../functions/formatReasonForAttachments";
 import { ignoreEvent } from "../functions/ignoreEvent";
 import { isBanned } from "../functions/isBanned";
@@ -37,6 +38,10 @@ export const MassunbanCmd = modActionsCmd({
 
     if (!unbanReasonReply || !unbanReasonReply.content || unbanReasonReply.content.toLowerCase().trim() === "cancel") {
       sendErrorMessage(pluginData, msg.channel, "Cancelled");
+      return;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, unbanReasonReply.content)) {
       return;
     }
 

@@ -4,6 +4,7 @@ import { sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { renderUsername, resolveUser } from "../../../utils";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import { formatReasonWithMessageLinkForAttachments } from "../functions/formatReasonForAttachments";
 import { modActionsCmd } from "../types";
 
@@ -26,6 +27,10 @@ export const NoteCmd = modActionsCmd({
 
     if (!args.note && msg.attachments.size === 0) {
       sendErrorMessage(pluginData, msg.channel, "Text or attachment required");
+      return;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.note)) {
       return;
     }
 

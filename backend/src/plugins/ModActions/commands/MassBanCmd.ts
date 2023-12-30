@@ -11,6 +11,7 @@ import { DAYS, MINUTES, SECONDS, noop, notifyUser, resolveUser } from "../../../
 import { userToTemplateSafeUser } from "../../../utils/templateSafeObjects";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -42,6 +43,10 @@ export const MassbanCmd = modActionsCmd({
     const banReasonReply = await waitForReply(pluginData.client, msg.channel, msg.author.id);
     if (!banReasonReply || !banReasonReply.content || banReasonReply.content.toLowerCase().trim() === "cancel") {
       sendErrorMessage(pluginData, msg.channel, "Cancelled");
+      return;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, banReasonReply.content)) {
       return;
     }
 

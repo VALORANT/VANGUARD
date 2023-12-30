@@ -5,6 +5,7 @@ import { LogType } from "../../../data/LogType";
 import { canActOn, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { DAYS, SECONDS, errorMessage, renderUsername, resolveMember, resolveUser } from "../../../utils";
 import { IgnoredEventType, ModActionsPluginType } from "../types";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "./detectAttachmentLink";
 import { formatReasonWithAttachments, formatReasonWithMessageLinkForAttachments } from "./formatReasonForAttachments";
 import { ignoreEvent } from "./ignoreEvent";
 import { isBanned } from "./isBanned";
@@ -65,6 +66,10 @@ export async function actualKickMemberCmd(
     contactMethods = readContactMethodsFromArgs(args);
   } catch (e) {
     sendErrorMessage(pluginData, msg.channel, e.message);
+    return;
+  }
+
+  if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
     return;
   }
 

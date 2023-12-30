@@ -4,6 +4,7 @@ import { Case } from "../../../data/entities/Case";
 import { sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { CasesPlugin } from "../../../plugins/Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "./detectAttachmentLink";
 import { formatReasonWithMessageLinkForAttachments } from "./formatReasonForAttachments";
 
 export async function updateCase(pluginData, msg: Message, args) {
@@ -21,6 +22,10 @@ export async function updateCase(pluginData, msg: Message, args) {
 
   if (!args.note && msg.attachments.size === 0) {
     sendErrorMessage(pluginData, msg.channel, "Text or attachment required");
+    return;
+  }
+
+  if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
     return;
   }
 

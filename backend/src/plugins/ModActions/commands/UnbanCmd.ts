@@ -7,6 +7,7 @@ import { hasPermission, sendErrorMessage, sendSuccessMessage } from "../../../pl
 import { resolveUser } from "../../../utils";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import { formatReasonWithMessageLinkForAttachments } from "../functions/formatReasonForAttachments";
 import { ignoreEvent } from "../functions/ignoreEvent";
 import { parseReason } from "../functions/parseReason";
@@ -46,6 +47,10 @@ export const UnbanCmd = modActionsCmd({
       }
 
       mod = args.mod;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+      return;
     }
 
     pluginData.state.serverLogs.ignoreLog(LogType.MEMBER_UNBAN, user.id);

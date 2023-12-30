@@ -4,12 +4,13 @@ import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { CaseTypes } from "../../../data/CaseTypes";
 import { clearExpiringTempban, registerExpiringTempban } from "../../../data/loops/expiringTempbansLoop";
 import { canActOn, hasPermission, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
-import { CasesPlugin } from "../../../plugins/Cases/CasesPlugin";
 import { renderUsername, resolveMember, resolveUser } from "../../../utils";
 import { banLock } from "../../../utils/lockNameHelpers";
 import { waitForButtonConfirm } from "../../../utils/waitForInteraction";
+import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
 import { banUserId } from "../functions/banUserId";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -53,6 +54,10 @@ export const BanCmd = modActionsCmd({
       return;
     }
     const time = args["time"] ? args["time"] : null;
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+      return;
+    }
 
     const reason = formatReasonWithMessageLinkForAttachments(args.reason, msg);
     const reasonWithAttachments = formatReasonWithAttachments(args.reason, [...msg.attachments.values()]);

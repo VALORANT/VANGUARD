@@ -5,6 +5,7 @@ import { canActOn, hasPermission, sendErrorMessage, sendSuccessMessage } from ".
 import { renderUsername, resolveMember, resolveUser } from "../../../utils";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import { formatReasonWithMessageLinkForAttachments } from "../functions/formatReasonForAttachments";
 import { parseReason } from "../functions/parseReason";
 import { modActionsCmd } from "../types";
@@ -59,6 +60,11 @@ export const AddCaseCmd = modActionsCmd({
       sendErrorMessage(pluginData, msg.channel, "Cannot add case: invalid case type");
       return;
     }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, args.reason)) {
+      return;
+    }
+
     const config = pluginData.config.get();
     const reason = parseReason(config, formatReasonWithMessageLinkForAttachments(args.reason, msg));
 

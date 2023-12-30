@@ -6,6 +6,7 @@ import { humanizeDurationShort } from "../../../humanizeDurationShort";
 import { canActOn, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { MINUTES, noop, resolveMember, resolveUser } from "../../../utils";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
+import { handleAttachmentLinkDetectionAndGetRestriction } from "../functions/detectAttachmentLink";
 import {
   formatReasonWithAttachments,
   formatReasonWithMessageLinkForAttachments,
@@ -37,6 +38,10 @@ export const MassWarnCmd = modActionsCmd({
     const warnReasonReply = await waitForReply(pluginData.client, msg.channel as TextChannel, msg.author.id);
     if (!warnReasonReply || !warnReasonReply.content || warnReasonReply.content.toLowerCase().trim() === "cancel") {
       sendErrorMessage(pluginData, msg.channel, "Cancelled");
+      return;
+    }
+
+    if (handleAttachmentLinkDetectionAndGetRestriction(pluginData, msg.channel, warnReasonReply.content)) {
       return;
     }
 
