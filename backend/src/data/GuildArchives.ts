@@ -97,7 +97,9 @@ export class GuildArchives extends BaseGuildRepository<ArchiveEntry> {
             return JSON.stringify({ name: sti.name, id: sti.id, isDefault: isDefaultSticker(sti.id) });
           }),
           user: partialUser,
-          channel: channel ? channelToTemplateSafeChannel(channel) : null,
+          channel: channel
+            ? channelToTemplateSafeChannel(channel)
+            : new TemplateSafeValueContainer({ name: "unknown-channel" }),
           username: renderUsername(msg.data.author.username, msg.data.author.discriminator),
         }),
       );
