@@ -1,7 +1,7 @@
 import * as t from "io-ts";
 import { SavedMessage } from "../../../data/entities/SavedMessage";
 import { humanizeDurationShort } from "../../../humanizeDurationShort";
-import { getBaseUrl } from "../../../pluginUtils";
+import { getDashboardUrl } from "../../../pluginUtils";
 import { convertDelayStringToMS, sorter, tDelayString, tNullable } from "../../../utils";
 import { RecentActionType } from "../constants";
 import { automodTrigger } from "../helpers";
@@ -85,7 +85,7 @@ export function createMessageSpamTrigger(spamType: RecentActionType, prettyName:
     },
 
     renderMatchInformation({ pluginData, matchResult, triggerConfig }) {
-      const baseUrl = getBaseUrl(pluginData);
+      const baseUrl = getDashboardUrl(pluginData);
       const archiveUrl = pluginData.state.archives.getUrl(baseUrl, matchResult.extra.archiveId);
       const withinMs = convertDelayStringToMS(triggerConfig.within);
       const withinStr = humanizeDurationShort(withinMs);
