@@ -6,12 +6,13 @@ import { AlertAction } from "./alert";
 import { ArchiveThreadAction } from "./archiveThread";
 import { BanAction } from "./ban";
 import { ChangeNicknameAction } from "./changeNickname";
-import { ChangeRolesAction } from "./changeRoles";
 import { ChangePermsAction } from "./changePerms";
+import { ChangeRolesAction } from "./changeRoles";
 import { CleanAction } from "./clean";
 import { KickAction } from "./kick";
 import { LogAction } from "./log";
 import { MuteAction } from "./mute";
+import { ReactAction } from "./react";
 import { RemoveRolesAction } from "./removeRoles";
 import { ReplyAction } from "./reply";
 import { SetAntiraidLevelAction } from "./setAntiraidLevel";
@@ -40,6 +41,7 @@ export const availableActions: Record<string, AutomodActionBlueprint<any>> = {
   archive_thread: ArchiveThreadAction,
   change_roles: ChangeRolesAction,
   change_perms: ChangePermsAction,
+  react: ReactAction,
 };
 
 export const AvailableActions = t.type({
@@ -62,4 +64,5 @@ export const AvailableActions = t.type({
   archive_thread: ArchiveThreadAction.configType,
   change_roles: ChangeRolesAction.configType,
   change_perms: ChangePermsAction.configType,
+  react: ReactAction.configType,
 });
