@@ -279,7 +279,7 @@ export function userToTemplateSafeUser(user: User | UnknownUser): TemplateSafeUs
     globalName: user.globalName,
     mention: `<@${user.id}>`,
     tag: user.tag,
-    avatarURL: user.displayAvatarURL(),
+    avatarURL: user?.displayAvatarURL ? user.displayAvatarURL() : undefined,
     bot: user.bot,
     createdAt: user.createdTimestamp,
     renderedUsername: renderUsername(user),
