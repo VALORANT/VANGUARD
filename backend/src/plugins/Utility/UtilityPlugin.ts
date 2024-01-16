@@ -80,6 +80,10 @@ const defaultOptions: PluginOptions<UtilityPluginType> = {
     autojoin_threads: true,
     embed_colour: 0x2b2d31,
     embed_color: 0x2b2d31,
+    emojis: {
+      member_joined: "➡️",
+      account_created: "📅",
+    },
   },
   overrides: [
     {

@@ -86,53 +86,60 @@ export async function getUserInfoEmbed(
     return embed;
   }
 
+  const config = pluginData.config.get();
   const userInfoLines = [`ID: \`${user.id}\`\n`, `Username: **${user.username}**`];
 
   if (user.discriminator !== "0") userInfoLines.push(`Discriminator: **${user.discriminator}**`);
   if (user.globalName) userInfoLines.push(`Display Name: **${user.globalName}**`);
-  if (member) userInfoLines.push(`Server Nickname: **${member.nickname ?? "*no nickname defined*"}**\n`);
+  if (member) userInfoLines.push(`Server Nickname: **${member.nickname ?? "*no nickname defined*"}**`);
+  userInfoLines.push(`Mention: <@!${user.id}>\n`);
 
-  userInfoLines.push(`Created: **<t:${Math.round(user.createdTimestamp / 1000)}:R>** (\`${prettyCreatedAt}\`)`);
-  userInfoLines.push(`Mention: <@!${user.id}>`);
+  userInfoLines.push(
+    `${config.emojis.account_created} Created: **<t:${Math.round(
+      user.createdTimestamp / 1000,
+    )}:R>** (\`${prettyCreatedAt}\`)`,
+  );
+
+  if (member) {
+    const roles = Array.from(member.roles.cache.values()).filter((r) => r.id !== pluginData.guild.id);
+    roles.sort(sorter("position", "DESC"));
+
+    userInfoLines.push(
+      `${config.emojis.member_joined} ${user.bot ? "Added" : "Joined"}: **<t:${Math.round(
+        member.joinedTimestamp! / 1000,
+      )}:R>** (\`${prettyJoinedAt}\`)`,
+    );
+
+    userInfoLines.push(`\n${roles.length > 0 ? "Roles: " + trimRoles(roles.map((r) => `<@&${r.id}>`)) : ""}`);
+  }
 
   embed.fields.push({
     name: preEmbedPadding + `${user.bot ? "Bot" : "User"} information`,
     value: userInfoLines.join("\n"),
   });
 
-  if (member) {
-    const roles = Array.from(member.roles.cache.values()).filter((r) => r.id !== pluginData.guild.id);
-    roles.sort(sorter("position", "DESC"));
+  const voiceChannel = member?.voice.channelId ? pluginData.guild.channels.cache.get(member.voice.channelId) : null;
 
+  if (member && (voiceChannel || member.voice.mute || member.voice.deaf)) {
     embed.fields.push({
-      name: preEmbedPadding + "Member information",
-      value: trimLines(`
-          ${user.bot ? "Added" : "Joined"}: **<t:${Math.round(
-        member.joinedTimestamp! / 1000,
-      )}:R>** (\`${prettyJoinedAt}\`)
-          ${roles.length > 0 ? "Roles: " + trimRoles(roles.map((r) => `<@&${r.id}>`)) : ""}
-        `),
+      name: preEmbedPadding + "Voice information",
+      value: trimEmptyLines(`
+        ${voiceChannel ? `Current voice channel: **${voiceChannel.name ?? "None"}**` : ""}
+        ${member.voice.serverMute ? "Server-muted: **Yes**" : ""}
+        ${member.voice.serverDeaf ? "Server-deafened: **Yes**" : ""}
+        ${member.voice.selfMute ? "Self-muted: **Yes**" : ""}
+        ${member.voice.selfDeaf ? "Self-deafened: **Yes**" : ""}
+      `),
     });
+  }
 
-    const voiceChannel = member.voice.channelId ? pluginData.guild.channels.cache.get(member.voice.channelId) : null;
-    if (voiceChannel || member.voice.mute || member.voice.deaf) {
-      embed.fields.push({
-        name: preEmbedPadding + "Voice information",
-        value: trimEmptyLines(`
-          ${voiceChannel ? `Current voice channel: **${voiceChannel.name ?? "None"}**` : ""}
-          ${member.voice.serverMute ? "Server-muted: **Yes**" : ""}
-          ${member.voice.serverDeaf ? "Server-deafened: **Yes**" : ""}
-          ${member.voice.selfMute ? "Self-muted: **Yes**" : ""}
-          ${member.voice.selfDeaf ? "Self-deafened: **Yes**" : ""}
-        `),
-      });
-    }
-  } else {
+  if (!member) {
     embed.fields.push({
       name: preEmbedPadding + "Member information",
       value: `⚠ ${user.bot ? "Bot" : "User"} is not on the server`,
     });
   }
+
   const cases = (await pluginData.state.cases.getByUserId(user.id)).filter((c) => !c.is_hidden);
 
   if (cases.length > 0) {

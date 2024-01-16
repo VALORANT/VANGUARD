@@ -40,6 +40,10 @@ export const ConfigSchema = t.type({
   autojoin_threads: t.boolean,
   embed_colour: t.number,
   embed_color: t.number,
+  emojis: t.partial({
+    member_joined: t.string,
+    account_created: t.string,
+  }),
 });
 export type TConfigSchema = t.TypeOf<typeof ConfigSchema>;
 
