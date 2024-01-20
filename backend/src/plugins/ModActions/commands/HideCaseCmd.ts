@@ -1,5 +1,5 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
-import { sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
+import { areCasesGlobal, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { modActionsCmd } from "../types";
 
 export const HideCaseCmd = modActionsCmd({
@@ -17,7 +17,7 @@ export const HideCaseCmd = modActionsCmd({
     const failed: number[] = [];
 
     for (const num of args.caseNum) {
-      const theCase = await pluginData.state.cases.findByCaseNumber(num);
+      const theCase = await pluginData.state.cases.findByCaseNumber(num, areCasesGlobal(pluginData));
       if (!theCase) {
         failed.push(num);
         continue;

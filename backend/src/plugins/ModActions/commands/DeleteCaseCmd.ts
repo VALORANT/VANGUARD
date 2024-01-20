@@ -1,7 +1,7 @@
 import { helpers } from "knub";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { Case } from "../../../data/entities/Case";
-import { sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
+import { areCasesGlobal, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { SECONDS, renderUsername, trimLines } from "../../../utils";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
@@ -28,7 +28,7 @@ export const DeleteCaseCmd = modActionsCmd({
     let cancelled = 0;
 
     for (const num of args.caseNumber) {
-      const theCase = await pluginData.state.cases.findByCaseNumber(num);
+      const theCase = await pluginData.state.cases.findByCaseNumber(num, areCasesGlobal(pluginData));
       if (!theCase) {
         failed.push(num);
         continue;

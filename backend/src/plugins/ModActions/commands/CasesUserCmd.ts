@@ -1,7 +1,7 @@
 import { APIEmbed } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { CaseTypes } from "../../../data/CaseTypes";
-import { sendErrorMessage } from "../../../pluginUtils";
+import { areCasesGlobal, sendErrorMessage } from "../../../pluginUtils";
 import { CasesPlugin } from "../../../plugins/Cases/CasesPlugin";
 import {
   UnknownUser,
@@ -54,7 +54,9 @@ export const CasesUserCmd = modActionsCmd({
     }
 
     const guildCases = pluginData.state.cases.with("notes");
-    let cases = await (args.mod ? guildCases.getByUserIdAndModId(user.id, args.mod) : guildCases.getByUserId(user.id));
+    let cases = await (args.mod
+      ? guildCases.getByUserIdAndModId(user.id, args.mod, areCasesGlobal(pluginData))
+      : guildCases.getByUserId(user.id, areCasesGlobal(pluginData)));
 
     const typesToShow: CaseTypes[] = [];
     if (args.notes) typesToShow.push(CaseTypes.Note);

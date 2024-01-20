@@ -2,6 +2,7 @@ import { GuildPluginData } from "knub";
 import { splitMessageIntoChunks } from "knub/helpers";
 import moment from "moment-timezone";
 import { Case } from "../../../data/entities/Case";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { convertDelayStringToMS, DBDateFormat, disableLinkPreviews, messageLink } from "../../../utils";
 import { TimeAndDatePlugin } from "../../TimeAndDate/TimeAndDatePlugin";
 import { caseAbbreviations } from "../caseAbbreviations";
@@ -22,7 +23,7 @@ export async function getCaseSummary(
   const timeAndDate = pluginData.getPlugin(TimeAndDatePlugin);
 
   const caseId = caseOrCaseId instanceof Case ? caseOrCaseId.id : caseOrCaseId;
-  const theCase = await pluginData.state.cases.with("notes").find(caseId);
+  const theCase = await pluginData.state.cases.with("notes").find(caseId, areCasesGlobal(pluginData));
   if (!theCase) return null;
 
   const firstNote = theCase.notes[0];

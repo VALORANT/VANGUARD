@@ -1,12 +1,13 @@
 import { GuildPluginData } from "knub";
 import { ERRORS, RecoverablePluginError } from "../../../RecoverablePluginError";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { UnknownUser, renderUsername, resolveUser } from "../../../utils";
 import { CaseNoteArgs, CasesPluginType } from "../types";
 import { postCaseToCaseLogChannel } from "./postToCaseLogChannel";
 import { resolveCaseId } from "./resolveCaseId";
 
 export async function createCaseNote(pluginData: GuildPluginData<CasesPluginType>, args: CaseNoteArgs): Promise<void> {
-  const theCase = await pluginData.state.cases.find(resolveCaseId(args.caseId));
+  const theCase = await pluginData.state.cases.find(resolveCaseId(args.caseId), areCasesGlobal(pluginData));
   if (!theCase) {
     throw new RecoverablePluginError(ERRORS.UNKNOWN_NOTE_CASE);
   }

@@ -2,7 +2,7 @@ import type { Snowflake } from "discord.js";
 import { GuildPluginData } from "knub";
 import { CaseTypes } from "../../../data/CaseTypes";
 import { logger } from "../../../logger";
-import { getDashboardUrl } from "../../../pluginUtils";
+import { areCasesGlobal, getDashboardUrl } from "../../../pluginUtils";
 import { renderUsername, resolveUser } from "../../../utils";
 import { CaseArgs, CasesPluginType } from "../types";
 import { createCaseNote } from "./createCaseNote";
@@ -25,7 +25,11 @@ export async function createCase(pluginData: GuildPluginData<CasesPluginType>, a
   }
 
   if (args.auditLogId) {
-    const existingAuditLogCase = await pluginData.state.cases.findByAuditLogId(args.auditLogId);
+    const existingAuditLogCase = await pluginData.state.cases.findByAuditLogId(
+      args.auditLogId,
+      areCasesGlobal(pluginData),
+    );
+
     if (existingAuditLogCase) {
       delete args.auditLogId;
       logger.warn(`Duplicate audit log ID for mod case: ${args.auditLogId}`);

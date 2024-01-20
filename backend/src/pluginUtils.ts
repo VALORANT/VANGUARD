@@ -153,6 +153,12 @@ export function getDashboardUrl(pluginData: AnyPluginData<any>) {
   return knub.getGlobalConfig().dashboard_url;
 }
 
+export function areCasesGlobal(pluginData: AnyPluginData<any>) {
+  const knub = pluginData.getKnubInstance() as TZeppelinKnub;
+  // @ts-expect-error
+  return Boolean(knub.getGlobalConfig().global_cases ?? true);
+}
+
 export function isOwner(pluginData: AnyPluginData<any>, userId: string) {
   const knub = pluginData.getKnubInstance() as TZeppelinKnub;
   // @ts-expect-error

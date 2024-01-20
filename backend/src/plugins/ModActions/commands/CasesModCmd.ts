@@ -1,6 +1,6 @@
 import { APIEmbed } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
-import { sendErrorMessage } from "../../../pluginUtils";
+import { areCasesGlobal, sendErrorMessage } from "../../../pluginUtils";
 import { UnknownUser, emptyEmbedValue, renderUsername, resolveMember, resolveUser, trimLines } from "../../../utils";
 import { asyncMap } from "../../../utils/async";
 import { createPaginatedMessage } from "../../../utils/createPaginatedMessage";
@@ -34,7 +34,7 @@ export const CasesModCmd = modActionsCmd({
     const modName = mod instanceof UnknownUser ? modId : renderUsername(mod);
 
     const casesPlugin = pluginData.getPlugin(CasesPlugin);
-    const totalCases = await casesPlugin.getTotalCasesByMod(modId);
+    const totalCases = await casesPlugin.getTotalCasesByMod(modId, areCasesGlobal(pluginData));
 
     if (totalCases === 0) {
       sendErrorMessage(pluginData, msg.channel, `No cases by **${modName}**`);
@@ -51,7 +51,12 @@ export const CasesModCmd = modActionsCmd({
       async (page) => {
         const config = pluginData.config.get();
         const embedColour = config.embed_colour ?? config.embed_color ?? 0x2b2d31;
-        const cases = await casesPlugin.getRecentCasesByMod(modId, casesPerPage, (page - 1) * casesPerPage);
+        const cases = await casesPlugin.getRecentCasesByMod(
+          modId,
+          casesPerPage,
+          areCasesGlobal(pluginData),
+          (page - 1) * casesPerPage,
+        );
         const lines = await asyncMap(cases, (c) => casesPlugin.getCaseSummary(c, true, msg.author.id));
 
         const firstCaseNum = (page - 1) * casesPerPage + 1;

@@ -1,7 +1,7 @@
 import { Message } from "discord.js";
 import { CaseTypes } from "../../../data/CaseTypes";
 import { Case } from "../../../data/entities/Case";
-import { sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
+import { areCasesGlobal, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
 import { CasesPlugin } from "../../../plugins/Cases/CasesPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "./detectAttachmentLink";
@@ -10,9 +10,9 @@ import { formatReasonWithMessageLinkForAttachments } from "./formatReasonForAtta
 export async function updateCase(pluginData, msg: Message, args) {
   let theCase: Case | undefined;
   if (args.caseNumber != null) {
-    theCase = await pluginData.state.cases.findByCaseNumber(args.caseNumber);
+    theCase = await pluginData.state.cases.findByCaseNumber(args.caseNumber, areCasesGlobal(pluginData));
   } else {
-    theCase = await pluginData.state.cases.findLatestByModId(msg.author.id);
+    theCase = await pluginData.state.cases.findLatestByModId(msg.author.id, areCasesGlobal(pluginData));
   }
 
   if (!theCase) {

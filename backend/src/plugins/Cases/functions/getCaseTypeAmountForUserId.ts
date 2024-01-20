@@ -1,5 +1,6 @@
 import { GuildPluginData } from "knub";
 import { CaseTypes } from "../../../data/CaseTypes";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { CasesPluginType } from "../types";
 
 export async function getCaseTypeAmountForUserId(
@@ -7,7 +8,10 @@ export async function getCaseTypeAmountForUserId(
   userID: string,
   type: CaseTypes,
 ): Promise<number> {
-  const cases = (await pluginData.state.cases.getByUserId(userID)).filter((c) => !c.is_hidden);
+  const cases = (await pluginData.state.cases.getByUserId(userID, areCasesGlobal(pluginData))).filter(
+    (c) => !c.is_hidden,
+  );
+
   let typeAmount = 0;
 
   if (cases.length > 0) {

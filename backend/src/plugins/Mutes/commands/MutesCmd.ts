@@ -9,7 +9,7 @@ import {
 import moment from "moment-timezone";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { humanizeDurationShort } from "../../../humanizeDurationShort";
-import { getBaseUrl } from "../../../pluginUtils";
+import { areCasesGlobal, getBaseUrl } from "../../../pluginUtils";
 import { DBDateFormat, MINUTES, renderUsername, resolveMember } from "../../../utils";
 import { IMuteWithDetails, mutesCmd } from "../types";
 
@@ -118,7 +118,7 @@ export const MutesCmd = mutesCmd({
 
       // Create a message line for each mute
       const caseIds = filteredMutes.map((m) => m.case_id).filter((v) => !!v);
-      const muteCases = caseIds.length ? await pluginData.state.cases.get(caseIds) : [];
+      const muteCases = caseIds.length ? await pluginData.state.cases.get(caseIds, areCasesGlobal(pluginData)) : [];
       const muteCasesById = muteCases.reduce((map, c) => map.set(c.id, c), new Map());
 
       lines = filteredMutes.map((mute) => {

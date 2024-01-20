@@ -14,7 +14,10 @@ export const LogsGuildMemberAddEvt = logsEvt({
 
     // TODO: Uncomment below once circular dependencies in Knub have been fixed
 
-    // const cases = (await pluginData.state.cases.with("notes").getByUserId(member.id)).filter(c => !c.is_hidden);
+    // const cases = (await pluginData.state.cases.with("notes").getByUserId(
+    //     member.id,
+    //     areCasesGlobal(pluginData)
+    // )).filter(c => !c.is_hidden);
     // cases.sort((a, b) => (a.created_at > b.created_at ? -1 : 1));
     //
     // if (cases.length) {

@@ -3,6 +3,7 @@ import { GuildPluginData } from "knub";
 import moment from "moment-timezone";
 import { CaseTypes } from "../../../data/CaseTypes";
 import { Case } from "../../../data/entities/Case";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { chunkMessageLines, emptyEmbedValue, messageLink } from "../../../utils";
 import { TimeAndDatePlugin } from "../../TimeAndDate/TimeAndDatePlugin";
 import { CasesPluginType } from "../types";
@@ -16,7 +17,10 @@ export async function getCaseEmbed(
   requestMemberId?: string,
   noOriginalCaseLink?: boolean,
 ): Promise<MessageCreateOptions & MessageEditOptions> {
-  const theCase = await pluginData.state.cases.with("notes").find(resolveCaseId(caseOrCaseId));
+  const theCase = await pluginData.state.cases
+    .with("notes")
+    .find(resolveCaseId(caseOrCaseId), areCasesGlobal(pluginData));
+
   if (!theCase) {
     throw new Error("Unknown case");
   }

@@ -1,4 +1,5 @@
 import { PermissionsBitField, Snowflake, TextChannel } from "discord.js";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { renderUsername, resolveMember } from "../../../utils";
 import { hasDiscordPermissions } from "../../../utils/hasDiscordPermissions";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
@@ -17,7 +18,7 @@ export const PostAlertOnMemberJoinEvt = modActionsEvt({
     const alertChannelId = config.alert_channel;
     if (!alertChannelId) return;
 
-    const actions = await pluginData.state.cases.getByUserId(member.id);
+    const actions = await pluginData.state.cases.getByUserId(member.id, areCasesGlobal(pluginData));
     const logs = pluginData.getPlugin(LogsPlugin);
 
     if (actions.length) {

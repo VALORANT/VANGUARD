@@ -1,4 +1,5 @@
 import { In, InsertResult, Repository } from "typeorm";
+import { FindOptionsWhere } from "typeorm/find-options/FindOptionsWhere";
 import { Queue } from "../Queue";
 import { chunkArray } from "../utils";
 import { BaseGuildRepository } from "./BaseGuildRepository";
@@ -20,89 +21,120 @@ export class GuildCases extends BaseGuildRepository {
     this.createQueue = new Queue();
   }
 
-  async get(ids: number[]): Promise<Case[]> {
+  async get(ids: number[], areCasesGlobal: boolean): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = { id: In(ids) };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.find({
       relations: this.getRelations(),
-      where: {
-        id: In(ids),
-      },
+      where,
     });
   }
 
-  async find(id: number): Promise<Case | null> {
+  async find(id: number, areCasesGlobal: boolean): Promise<Case | null> {
+    const where: FindOptionsWhere<Case> = { id };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.findOne({
       relations: this.getRelations(),
-      where: {
-        id,
-      },
+      where,
     });
   }
 
-  async findByCaseNumber(caseNumber: number): Promise<Case | null> {
+  async findByCaseNumber(caseNumber: number, areCasesGlobal: boolean): Promise<Case | null> {
+    const where: FindOptionsWhere<Case> = { case_number: caseNumber };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.findOne({
       relations: this.getRelations(),
-      where: {
-        case_number: caseNumber,
-      },
+      where,
     });
   }
 
-  async findLatestByModId(modId: string): Promise<Case | null> {
+  async findLatestByModId(modId: string, areCasesGlobal: boolean): Promise<Case | null> {
+    const where: FindOptionsWhere<Case> = { mod_id: modId };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.findOne({
       relations: this.getRelations(),
-      where: {
-        mod_id: modId,
-      },
+      where,
       order: {
         case_number: "DESC",
       },
     });
   }
 
-  async findByAuditLogId(auditLogId: string): Promise<Case | null> {
+  async findByAuditLogId(auditLogId: string, areCasesGlobal: boolean): Promise<Case | null> {
+    const where: FindOptionsWhere<Case> = { audit_log_id: auditLogId };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.findOne({
       relations: this.getRelations(),
-      where: {
-        audit_log_id: auditLogId,
-      },
+      where,
     });
   }
 
-  async getByUserId(userId: string): Promise<Case[]> {
+  async getByUserId(userId: string, areCasesGlobal: boolean): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = { user_id: userId };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.find({
       relations: this.getRelations(),
-      where: {
-        user_id: userId,
-      },
+      where,
     });
   }
 
-  async getByUserIdAndModId(userId: string, modId: string): Promise<Case[]> {
+  async getByUserIdAndModId(userId: string, modId: string, areCasesGlobal: boolean): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = { user_id: userId, mod_id: modId };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.find({
       relations: this.getRelations(),
-      where: {
-        user_id: userId,
-        mod_id: modId,
-      },
+      where,
     });
   }
 
-  async getTotalCasesByModId(modId: string): Promise<number> {
-    return this.cases.count({
-      where: {
-        mod_id: modId,
-        is_hidden: false,
-      },
-    });
+  async getTotalCasesByModId(modId: string, areCasesGlobal: boolean): Promise<number> {
+    const where: FindOptionsWhere<Case> = { mod_id: modId, is_hidden: false };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
+    return this.cases.count({ where });
   }
 
-  async getRecentByModId(modId: string, count: number, skip = 0): Promise<Case[]> {
+  async getRecentByModId(modId: string, count: number, areCasesGlobal: boolean, skip = 0): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = { mod_id: modId, is_hidden: false };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
     return this.cases.find({
       relations: this.getRelations(),
-      where: {
-        mod_id: modId,
-        is_hidden: false,
-      },
+      where,
       skip,
       take: count,
       order: {
@@ -174,7 +206,7 @@ export class GuildCases extends BaseGuildRepository {
 
   async create(data): Promise<Case> {
     const result = await this.createInternal(data);
-    return (await this.find(result.identifiers[0].id))!;
+    return (await this.find(result.identifiers[0].id, true))!;
   }
 
   update(id, data) {

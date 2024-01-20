@@ -6,7 +6,8 @@ export function getRecentCasesByMod(
   pluginData: GuildPluginData<CasesPluginType>,
   modId: string,
   count: number,
+  areCasesGlobal: boolean,
   skip = 0,
 ): Promise<Case[]> {
-  return pluginData.state.cases.getRecentByModId(modId, count, skip);
+  return pluginData.state.cases.getRecentByModId(modId, count, areCasesGlobal, skip);
 }

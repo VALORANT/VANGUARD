@@ -2,6 +2,7 @@ import { APIEmbed } from "discord.js";
 import { GuildPluginData } from "knub";
 import moment from "moment-timezone";
 import { CaseTypes } from "../../../data/CaseTypes";
+import { areCasesGlobal } from "../../../pluginUtils";
 import {
   EmbedWith,
   messageLink,
@@ -140,7 +141,9 @@ export async function getUserInfoEmbed(
     });
   }
 
-  const cases = (await pluginData.state.cases.getByUserId(user.id)).filter((c) => !c.is_hidden);
+  const cases = (await pluginData.state.cases.getByUserId(user.id, areCasesGlobal(pluginData))).filter(
+    (c) => !c.is_hidden,
+  );
 
   if (cases.length > 0) {
     cases.sort((a, b) => {

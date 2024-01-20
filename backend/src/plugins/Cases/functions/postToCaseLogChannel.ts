@@ -1,6 +1,7 @@
 import { MessageCreateOptions, NewsChannel, RESTJSONErrorCodes, Snowflake, TextChannel } from "discord.js";
 import { GuildPluginData } from "knub";
 import { Case } from "../../../data/entities/Case";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { isDiscordAPIError } from "../../../utils";
 import { InternalPosterPlugin } from "../../InternalPoster/InternalPosterPlugin";
 import { InternalPosterMessageResult } from "../../InternalPoster/functions/sendMessage";
@@ -49,7 +50,7 @@ export async function postCaseToCaseLogChannel(
   pluginData: GuildPluginData<CasesPluginType>,
   caseOrCaseId: Case | number,
 ): Promise<void> {
-  const theCase = await pluginData.state.cases.find(resolveCaseId(caseOrCaseId));
+  const theCase = await pluginData.state.cases.find(resolveCaseId(caseOrCaseId), areCasesGlobal(pluginData));
   if (!theCase) return;
 
   const caseEmbed = await getCaseEmbed(pluginData, caseOrCaseId, undefined, true);

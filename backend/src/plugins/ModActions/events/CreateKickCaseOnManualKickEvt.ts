@@ -2,6 +2,7 @@ import { AuditLogEvent, User } from "discord.js";
 import { CaseTypes } from "../../../data/CaseTypes";
 import { Case } from "../../../data/entities/Case";
 import { logger } from "../../../logger";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { UnknownUser, resolveUser } from "../../../utils";
 import { findMatchingAuditLogEntry } from "../../../utils/findMatchingAuditLogEntry";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
@@ -30,7 +31,9 @@ export const CreateKickCaseOnManualKickEvt = modActionsEvt({
     // Since a member leaving and a member being kicked are both the same gateway event,
     // we can only really interpret this event as a kick if there is a matching audit log entry.
     if (kickAuditLogEntry) {
-      createdCase = (await pluginData.state.cases.findByAuditLogId(kickAuditLogEntry.id)) || null;
+      createdCase =
+        (await pluginData.state.cases.findByAuditLogId(kickAuditLogEntry.id, areCasesGlobal(pluginData))) || null;
+
       if (createdCase) {
         logger.warn(
           `Tried to create duplicate case for audit log entry ${kickAuditLogEntry.id}, existing case id ${createdCase.id}`,

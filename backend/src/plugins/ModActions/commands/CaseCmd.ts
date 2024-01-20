@@ -1,6 +1,6 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { CasesPlugin } from "../../../plugins/Cases/CasesPlugin";
-import { sendErrorMessage } from "../../../pluginUtils";
+import { areCasesGlobal, sendErrorMessage } from "../../../pluginUtils";
 import { modActionsCmd } from "../types";
 
 export const CaseCmd = modActionsCmd({
@@ -15,7 +15,7 @@ export const CaseCmd = modActionsCmd({
   ],
 
   async run({ pluginData, message: msg, args }) {
-    const theCase = await pluginData.state.cases.findByCaseNumber(args.caseNumber);
+    const theCase = await pluginData.state.cases.findByCaseNumber(args.caseNumber, areCasesGlobal(pluginData));
 
     if (!theCase) {
       sendErrorMessage(pluginData, msg.channel, "Case not found");

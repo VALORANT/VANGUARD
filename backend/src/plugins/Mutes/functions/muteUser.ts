@@ -8,6 +8,7 @@ import { MuteTypes } from "../../../data/MuteTypes";
 import { Case } from "../../../data/entities/Case";
 import { Mute } from "../../../data/entities/Mute";
 import { registerExpiringMute } from "../../../data/loops/expiringMutesLoop";
+import { areCasesGlobal } from "../../../pluginUtils";
 import { TemplateSafeValueContainer, renderTemplate } from "../../../templateFormatter";
 import {
   UserNotificationMethod,
@@ -230,7 +231,9 @@ export async function muteUser(
   // Create/update a case
   const casesPlugin = pluginData.getPlugin(CasesPlugin);
   let theCase: Case | null =
-    existingMute && existingMute.case_id ? await pluginData.state.cases.find(existingMute.case_id) : null;
+    existingMute && existingMute.case_id
+      ? await pluginData.state.cases.find(existingMute.case_id, areCasesGlobal(pluginData))
+      : null;
 
   if (theCase) {
     // Update old case
