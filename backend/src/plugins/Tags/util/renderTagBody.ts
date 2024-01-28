@@ -1,13 +1,10 @@
-import { GuildPluginData, ExtendedMatchParams } from "knub";
-import { renderTemplate, TemplateSafeValue, TemplateSafeValueContainer } from "../../../templateFormatter";
-import { renderRecursively, resolveUser, StrictMessageContent, UnknownUser } from "../../../utils";
+import { ExtendedMatchParams, GuildPluginData } from "knub";
+import { TemplateSafeValue, TemplateSafeValueContainer, renderTemplate } from "../../../templateFormatter";
+import { StrictMessageContent, UnknownUser, renderRecursively, resolveUser } from "../../../utils";
+import { counterValueToTemplateSafeCounterValue, userToTemplateSafeUser } from "../../../utils/templateSafeObjects";
 import { CountersPlugin } from "../../Counters/CountersPlugin";
 import { TTag, TagsPluginType } from "../types";
 import { findTagByName } from "./findTagByName";
-import {
-  counterValueToTemplateSafeCounterValue,
-  userToTemplateSafeUser,
-} from "../../../utils/templateSafeObjects";
 
 const MAX_TAG_FN_CALLS = 25;
 
@@ -57,12 +54,12 @@ export async function renderTagBody(
       const cData = await countersPlugin.getCounterValue(counter, channelId, userId);
       return cData?.toString() ?? "";
     },
-    async get_all_counter_values(counter, field?, limit?, userId?) {
+    async get_all_counter_values(counter, limit?, userId?) {
       if (!countersPlugin || !countersPlugin.counterExists(counter)) return "";
 
       const cData = (
-        field
-          ? await countersPlugin.getRankedCounterValues(counter, field, limit, userId)
+        typeof limit === "number" || userId
+          ? await countersPlugin.getRankedCounterValues(counter, limit, userId)
           : await countersPlugin.getAllCounterValues(counter)
       )?.map((cd) => counterValueToTemplateSafeCounterValue(cd));
 
