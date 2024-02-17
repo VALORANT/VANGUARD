@@ -9,6 +9,7 @@ import { ModActionsPluginType } from "../../types";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLinkReaction";
 import { formatReasonWithAttachments, formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
 import { warnMember } from "../warnMember";
+import { parseReason } from "../parseReason";
 
 export async function actualWarnCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -26,8 +27,14 @@ export async function actualWarnCmd(
   }
 
   const config = pluginData.config.get();
-  const formattedReason = await formatReasonWithMessageLinkForAttachments(pluginData, reason, context, attachments);
-  const formattedReasonWithAttachments = formatReasonWithAttachments(reason, attachments);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const formattedReason = await formatReasonWithMessageLinkForAttachments(
+    pluginData,
+    parsedReason,
+    context,
+    attachments,
+  );
+  const formattedReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   const casesPlugin = pluginData.getPlugin(CasesPlugin);
   const priorWarnAmount = await casesPlugin.getCaseTypeAmountForUserId(userToWarn.id, CaseTypes.Warn);

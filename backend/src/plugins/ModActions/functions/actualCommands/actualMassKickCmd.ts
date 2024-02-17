@@ -42,16 +42,13 @@ export async function actualMassKickCmd(
     return;
   }
 
-  const kickReason = await formatReasonWithMessageLinkForAttachments(
-    pluginData,
-    parseReason(pluginData.config.get(), kickReasonReply.content),
-    kickReasonReply,
-    [...kickReasonReply.attachments.values()],
-  );
-  const kickReasonWithAttachments = parseReason(
-    pluginData.config.get(),
-    formatReasonWithAttachments(kickReasonReply.content, [...kickReasonReply.attachments.values()]),
-  );
+  const parsedReason = parseReason(pluginData.config.get(), kickReasonReply.content);
+  const kickReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, kickReasonReply, [
+    ...kickReasonReply.attachments.values(),
+  ]);
+  const kickReasonWithAttachments = formatReasonWithAttachments(parsedReason, [
+    ...kickReasonReply.attachments.values(),
+  ]);
 
   // Verify we can act on each of the users specified
   for (const userId of userIds) {

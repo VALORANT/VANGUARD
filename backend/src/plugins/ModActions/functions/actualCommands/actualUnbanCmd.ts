@@ -11,6 +11,7 @@ import { IgnoredEventType, ModActionsPluginType } from "../../types";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLinkReaction";
 import { formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
 import { ignoreEvent } from "../ignoreEvent";
+import { parseReason } from "../parseReason";
 
 export async function actualUnbanCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -26,7 +27,14 @@ export async function actualUnbanCmd(
   }
 
   pluginData.state.serverLogs.ignoreLog(LogType.MEMBER_UNBAN, user.id);
-  const formattedReason = await formatReasonWithMessageLinkForAttachments(pluginData, reason, context, attachments);
+
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const formattedReason = await formatReasonWithMessageLinkForAttachments(
+    pluginData,
+    parsedReason,
+    context,
+    attachments,
+  );
 
   try {
     ignoreEvent(pluginData, IgnoredEventType.Unban, user.id);

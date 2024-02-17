@@ -13,6 +13,7 @@ import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLin
 import { formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
 import { ignoreEvent } from "../ignoreEvent";
 import { isBanned } from "../isBanned";
+import { parseReason } from "../parseReason";
 
 export async function actualMassUnbanCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -38,7 +39,8 @@ export async function actualMassUnbanCmd(
     return;
   }
 
-  const unbanReason = await formatReasonWithMessageLinkForAttachments(pluginData, unbanReasonReply.content, context, [
+  const parsedReason = parseReason(pluginData.config.get(), unbanReasonReply.content);
+  const unbanReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, [
     ...unbanReasonReply.attachments.values(),
   ]);
 

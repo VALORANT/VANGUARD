@@ -37,14 +37,11 @@ export async function actualMassWarnCmd(
     return;
   }
 
-  const config = pluginData.config.get();
-  const warnReason = await formatReasonWithMessageLinkForAttachments(
-    pluginData,
-    parseReason(config, warnReasonReply.content),
-    warnReasonReply,
-    [...warnReasonReply.attachments.values()],
-  );
-  const warnReasonWithAttachments = formatReasonWithAttachments(parseReason(config, warnReasonReply.content), [
+  const parsedReason = parseReason(pluginData.config.get(), warnReasonReply.content);
+  const warnReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, warnReasonReply, [
+    ...warnReasonReply.attachments.values(),
+  ]);
+  const warnReasonWithAttachments = formatReasonWithAttachments(parsedReason, [
     ...warnReasonReply.attachments.values(),
   ]);
 

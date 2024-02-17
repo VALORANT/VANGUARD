@@ -10,6 +10,7 @@ import { IgnoredEventType, ModActionsPluginType } from "../../types";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLinkReaction";
 import { formatReasonWithAttachments, formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
 import { ignoreEvent } from "../ignoreEvent";
+import { parseReason } from "../parseReason";
 
 export async function actualForceBanCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -24,8 +25,14 @@ export async function actualForceBanCmd(
     return;
   }
 
-  const formattedReason = await formatReasonWithMessageLinkForAttachments(pluginData, reason, context, attachments);
-  const formattedReasonWithAttachments = formatReasonWithAttachments(reason, attachments);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const formattedReason = await formatReasonWithMessageLinkForAttachments(
+    pluginData,
+    parsedReason,
+    context,
+    attachments,
+  );
+  const formattedReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   ignoreEvent(pluginData, IgnoredEventType.Ban, user.id);
   pluginData.state.serverLogs.ignoreLog(LogType.MEMBER_BAN, user.id);

@@ -15,6 +15,7 @@ import { formatReasonWithAttachments, formatReasonWithMessageLinkForAttachments 
 import { ignoreEvent } from "../ignoreEvent";
 import { renderTemplate, TemplateSafeValueContainer } from "../../../../templateFormatter";
 import { userToTemplateSafeUser } from "../../../../utils/templateSafeObjects";
+import { parseReason } from "../parseReason";
 
 export async function actualMassBanCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -43,12 +44,11 @@ export async function actualMassBanCmd(
 
   const config = pluginData.config.get();
   const shouldLogEachCase = pluginData.getPlugin(CasesPlugin).shouldLogEachMassBanCase();
-  const banReason = await formatReasonWithMessageLinkForAttachments(pluginData, banReasonReply.content, context, [
+  const parsedReason = parseReason(pluginData.config.get(), banReasonReply.content);
+  const banReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, [
     ...banReasonReply.attachments.values(),
   ]);
-  const banReasonWithAttachments = formatReasonWithAttachments(banReasonReply.content, [
-    ...banReasonReply.attachments.values(),
-  ]);
+  const banReasonWithAttachments = formatReasonWithAttachments(parsedReason, [...banReasonReply.attachments.values()]);
 
   // Verify we can act on each of the users specified
   for (const userId of userIds) {

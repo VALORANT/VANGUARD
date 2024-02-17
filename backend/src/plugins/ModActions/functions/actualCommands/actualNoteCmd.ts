@@ -8,6 +8,7 @@ import { LogsPlugin } from "../../../Logs/LogsPlugin";
 import { ModActionsPluginType } from "../../types";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLinkReaction";
 import { formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
+import { parseReason } from "../parseReason";
 
 export async function actualNoteCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -22,7 +23,8 @@ export async function actualNoteCmd(
   }
 
   const userName = renderUsername(user);
-  const reason = await formatReasonWithMessageLinkForAttachments(pluginData, note, context, attachments);
+  const parsedReason = parseReason(pluginData.config.get(), note);
+  const reason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, attachments);
 
   const casesPlugin = pluginData.getPlugin(CasesPlugin);
   const createdCase = await casesPlugin.createCase({

@@ -7,6 +7,7 @@ import { MutesPlugin } from "../../../Mutes/MutesPlugin";
 import { ModActionsPluginType } from "../../types";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLinkReaction";
 import { formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
+import { parseReason } from "../parseReason";
 
 export async function actualUnmuteCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -22,9 +23,10 @@ export async function actualUnmuteCmd(
     return;
   }
 
+  const parsedReason = reason ? parseReason(pluginData.config.get(), reason) : null;
   const formattedReason =
-    reason || attachments.length > 0
-      ? await formatReasonWithMessageLinkForAttachments(pluginData, reason ?? "", context, attachments)
+    parsedReason || attachments.length > 0
+      ? await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason ?? "", context, attachments)
       : undefined;
 
   const mutesPlugin = pluginData.getPlugin(MutesPlugin);

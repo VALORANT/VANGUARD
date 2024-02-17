@@ -10,6 +10,7 @@ import { formatReasonWithAttachments, formatReasonWithMessageLinkForAttachments 
 import { ignoreEvent } from "../ignoreEvent";
 import { isBanned } from "../isBanned";
 import { kickMember } from "../kickMember";
+import { parseReason } from "../parseReason";
 
 export async function actualKickCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,
@@ -45,8 +46,14 @@ export async function actualKickCmd(
     return;
   }
 
-  const formattedReason = await formatReasonWithMessageLinkForAttachments(pluginData, reason, context, attachments);
-  const formattedReasonWithAttachments = formatReasonWithAttachments(reason, attachments);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const formattedReason = await formatReasonWithMessageLinkForAttachments(
+    pluginData,
+    parsedReason,
+    context,
+    attachments,
+  );
+  const formattedReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   const kickResult = await kickMember(pluginData, memberToKick, formattedReason, formattedReasonWithAttachments, {
     contactMethods,
