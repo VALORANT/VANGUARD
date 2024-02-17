@@ -32,7 +32,7 @@ export const zTrigger = z
       .optional(),
   })
   .transform((val, ctx) => {
-    const ruleName = String(ctx.path[ctx.path.length - 2]).trim();
+    const ruleName = String(ctx.path[ctx.path.length - 1]).trim();
 
     let reverseCondition = val.reverse_condition;
     if (!reverseCondition) {

@@ -18,6 +18,7 @@ export const ChangeRolesAction = automodAction({
       add: z.array(z.string()),
       remove: z.array(z.string()),
     })
+    .optional()
     .default({
       add: [],
       remove: [],
