@@ -38,7 +38,7 @@ export async function actualWarnCmd(
       { confirmText: "Yes", cancelText: "No", restrictToId: authorId },
     );
     if (!reply) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Warn cancelled by moderator");
+      await pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Warn cancelled by moderator");
       return;
     }
   }
