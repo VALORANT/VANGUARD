@@ -15,6 +15,7 @@ const opts = {
   unmutes: ct.switchOption({ def: false, shortcut: "um" }),
   bans: ct.switchOption({ def: false, shortcut: "b" }),
   unbans: ct.switchOption({ def: false, shortcut: "ub" }),
+  show: ct.switchOption({ def: false, shortcut: "sh" }),
   search: ct.string({ option: true, shortcut: "s" }),
 };
 
@@ -56,6 +57,7 @@ export const CasesUserMsgCmd = modActionsMsgCmd({
       args.reverseFilters,
       args.hidden,
       args.expand,
+      args.show,
       args.search,
     );
   },
