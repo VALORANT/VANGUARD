@@ -84,3 +84,6 @@ npm-audit.txt
 *.debug.js
 
 .vscode/
+
+config-errors.txt
+/config-schema.json

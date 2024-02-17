@@ -17,7 +17,6 @@ export async function getMessageInfoEmbed(
   pluginData: GuildPluginData<UtilityPluginType>,
   channelId: string,
   messageId: string,
-  //  requestMemberId?: string,
 ): Promise<APIEmbed | null> {
   const message = await (pluginData.guild.channels.resolve(channelId as Snowflake) as TextChannel).messages
     .fetch(messageId as Snowflake)

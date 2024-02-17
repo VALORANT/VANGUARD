@@ -4,10 +4,7 @@ import { renderRecursively, resolveUser, StrictMessageContent, UnknownUser } fro
 import { CountersPlugin } from "../../Counters/CountersPlugin";
 import { TTag, TagsPluginType } from "../types";
 import { findTagByName } from "./findTagByName";
-import {
-  counterValueToTemplateSafeCounterValue,
-  userToTemplateSafeUser,
-} from "../../../utils/templateSafeObjects";
+import { counterValueToTemplateSafeCounterValue, userToTemplateSafeUser } from "../../../utils/templateSafeObjects";
 
 const MAX_TAG_FN_CALLS = 25;
 

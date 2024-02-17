@@ -1,5 +1,5 @@
-import { PermissionFlagsBits, Permissions, Snowflake } from 'discord.js';
-import * as t from "io-ts";
+import { PermissionFlagsBits, Snowflake } from "discord.js";
+import z from "zod";
 import isEqual from "lodash.isequal";
 import { nonNullish, unique } from "../../../utils";
 import { canAssignRole } from "../../../utils/canAssignRole";
@@ -13,17 +13,18 @@ import { automodAction } from "../helpers";
 const p = PermissionFlagsBits;
 
 export const ChangeRolesAction = automodAction({
-  configType: t.type({
-    add: t.array(t.string),
-    remove: t.array(t.string),
-  }),
-  defaultConfig: {
-    add: [],
-    remove: [],
-  },
+  configSchema: z
+    .strictObject({
+      add: z.array(z.string()),
+      remove: z.array(z.string()),
+    })
+    .default({
+      add: [],
+      remove: [],
+    }),
 
   async apply({ pluginData, contexts, actionConfig, ruleName }) {
-    const members = unique(contexts.map(c => c.member).filter(nonNullish));
+    const members = unique(contexts.map((c) => c.member).filter(nonNullish));
     const me = pluginData.guild.members.cache.get(pluginData.client.user!.id)!;
 
     const missingPermissions = getMissingPermissions(me.permissions, p.ManageRoles);
@@ -66,7 +67,7 @@ export const ChangeRolesAction = automodAction({
     }
 
     await Promise.all(
-      members.map(async member => {
+      members.map(async (member) => {
         const memberRoles = new Set(member.roles.cache.keys());
         for (const roleId of rolesToAssign) {
           memberRoles.add(roleId);

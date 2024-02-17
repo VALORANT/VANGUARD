@@ -1,30 +1,32 @@
-import * as t from "io-ts";
 import { BasePluginType } from "knub";
+import { U } from "ts-toolbelt";
+import z from "zod";
 import { CaseNameToType, CaseTypes } from "../../data/CaseTypes";
 import { GuildArchives } from "../../data/GuildArchives";
 import { GuildCases } from "../../data/GuildCases";
 import { GuildLogs } from "../../data/GuildLogs";
 import { GuildSavedMessages } from "../../data/GuildSavedMessages";
-import { tDelayString, tNullable, tPartialDictionary } from "../../utils";
-import { tColor } from "../../utils/tColor";
+import { keys, zBoundedCharacters, zDelayString, zSnowflake } from "../../utils";
+import { zColor } from "../../utils/zColor";
 
-export const ConfigSchema = t.type({
-  log_automatic_actions: t.boolean,
-  case_log_channel: tNullable(t.string),
-  show_relative_times: t.boolean,
-  relative_time_cutoff: tDelayString,
-  guild_aliases: tNullable(t.record(t.string, t.string)),
-  case_colors: tNullable(tPartialDictionary(t.keyof(CaseNameToType), tColor)),
-  case_icons: tNullable(tPartialDictionary(t.keyof(CaseNameToType), t.string)),
-  log_each_massban_case: t.boolean,
-  log_each_massunban_case: t.boolean,
-  embed_colour: t.number,
-  embed_color: t.number,
+const caseKeys = keys(CaseNameToType) as U.ListOf<keyof typeof CaseNameToType>;
+
+export const zCasesConfig = z.strictObject({
+  log_automatic_actions: z.boolean(),
+  case_log_channel: zSnowflake.nullable(),
+  show_relative_times: z.boolean(),
+  relative_time_cutoff: zDelayString.default("1w"),
+  guild_aliases: z.nullable(z.record(z.string(), z.string())),
+  case_colors: z.record(z.enum(caseKeys), zColor).nullable(),
+  case_icons: z.record(z.enum(caseKeys), zBoundedCharacters(0, 100)).nullable(),
+  log_each_massban_case: z.boolean(),
+  log_each_massunban_case: z.boolean(),
+  embed_colour: z.number(),
+  embed_color: z.number(),
 });
-export type TConfigSchema = t.TypeOf<typeof ConfigSchema>;
 
 export interface CasesPluginType extends BasePluginType {
-  config: TConfigSchema;
+  config: z.infer<typeof zCasesConfig>;
   state: {
     logs: GuildLogs;
     cases: GuildCases;

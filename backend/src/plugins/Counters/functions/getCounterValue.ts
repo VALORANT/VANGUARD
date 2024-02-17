@@ -65,6 +65,5 @@ export async function getRankedCounterValues(
 
   const counterId = pluginData.state.counterIds[counterName];
 
-  let vl = await pluginData.state.counters.getCounterRank(counterId, rankedField, limit, userId);
-  return vl;
+  return await pluginData.state.counters.getCounterRank(counterId, rankedField, limit, userId);
 }

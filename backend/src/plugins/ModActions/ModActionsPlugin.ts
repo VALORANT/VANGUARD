@@ -6,52 +6,84 @@ import { onGuildEvent } from "../../data/GuildEvents";
 import { GuildLogs } from "../../data/GuildLogs";
 import { GuildMutes } from "../../data/GuildMutes";
 import { GuildTempbans } from "../../data/GuildTempbans";
-import { makeIoTsConfigParser, mapToPublicFn } from "../../pluginUtils";
-import { MINUTES, trimPluginDescription } from "../../utils";
+import { mapToPublicFn } from "../../pluginUtils";
+import { MINUTES, trimPluginDescription, UnknownUser } from "../../utils";
 import { CasesPlugin } from "../Cases/CasesPlugin";
 import { LogsPlugin } from "../Logs/LogsPlugin";
 import { MutesPlugin } from "../Mutes/MutesPlugin";
 import { TimeAndDatePlugin } from "../TimeAndDate/TimeAndDatePlugin";
 import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
-import { AddCaseCmd } from "./commands/AddCaseCmd";
-import { BanCmd } from "./commands/BanCmd";
-import { CaseCmd } from "./commands/CaseCmd";
-import { CasesModCmd } from "./commands/CasesModCmd";
-import { CasesUserCmd } from "./commands/CasesUserCmd";
-import { DeleteCaseCmd } from "./commands/DeleteCaseCmd";
-import { ForcebanCmd } from "./commands/ForcebanCmd";
-import { ForcemuteCmd } from "./commands/ForcemuteCmd";
-import { ForceUnmuteCmd } from "./commands/ForceunmuteCmd";
-import { HideCaseCmd } from "./commands/HideCaseCmd";
-import { KickCmd } from "./commands/KickCmd";
-import { MassbanCmd } from "./commands/MassBanCmd";
-import { MasskickCmd } from "./commands/MassKickCmd";
-import { MassunbanCmd } from "./commands/MassUnbanCmd";
-import { MassWarnCmd } from "./commands/MassWarnCmd";
-import { MassmuteCmd } from "./commands/MassmuteCmd";
-import { MuteCmd } from "./commands/MuteCmd";
-import { NoteCmd } from "./commands/NoteCmd";
-import { SoftbanCmd } from "./commands/SoftbanCommand";
-import { UnbanCmd } from "./commands/UnbanCmd";
-import { UnhideCaseCmd } from "./commands/UnhideCaseCmd";
-import { UnmuteCmd } from "./commands/UnmuteCmd";
-import { UpdateCmd } from "./commands/UpdateCmd";
-import { WarnCmd } from "./commands/WarnCmd";
+import { AddCaseMsgCmd } from "./commands/addcase/AddCaseMsgCmd";
+import { AddCaseSlashCmd } from "./commands/addcase/AddCaseSlashCmd";
+import { BanMsgCmd } from "./commands/ban/BanMsgCmd";
+import { BanSlashCmd } from "./commands/ban/BanSlashCmd";
+import { CaseMsgCmd } from "./commands/case/CaseMsgCmd";
+import { CaseSlashCmd } from "./commands/case/CaseSlashCmd";
+import { CasesModMsgCmd } from "./commands/cases/CasesModMsgCmd";
+import { CasesSlashCmd } from "./commands/cases/CasesSlashCmd";
+import { CasesUserMsgCmd } from "./commands/cases/CasesUserMsgCmd";
+import { DeleteCaseMsgCmd } from "./commands/deletecase/DeleteCaseMsgCmd";
+import { DeleteCaseSlashCmd } from "./commands/deletecase/DeleteCaseSlashCmd";
+import { ForceBanMsgCmd } from "./commands/forceban/ForceBanMsgCmd";
+import { ForceBanSlashCmd } from "./commands/forceban/ForceBanSlashCmd";
+import { ForceMuteMsgCmd } from "./commands/forcemute/ForceMuteMsgCmd";
+import { ForceMuteSlashCmd } from "./commands/forcemute/ForceMuteSlashCmd";
+import { ForceUnmuteMsgCmd } from "./commands/forceunmute/ForceUnmuteMsgCmd";
+import { ForceUnmuteSlashCmd } from "./commands/forceunmute/ForceUnmuteSlashCmd";
+import { HideCaseMsgCmd } from "./commands/hidecase/HideCaseMsgCmd";
+import { HideCaseSlashCmd } from "./commands/hidecase/HideCaseSlashCmd";
+import { KickMsgCmd } from "./commands/kick/KickMsgCmd";
+import { KickSlashCmd } from "./commands/kick/KickSlashCmd";
+import { MassBanMsgCmd } from "./commands/massban/MassBanMsgCmd";
+import { MassBanSlashCmd } from "./commands/massban/MassBanSlashCmd";
+import { MassKickMsgCmd } from "./commands/masskick/MassKickMsgCmd";
+import { MassKickSlashCmd } from "./commands/masskick/MassKickSlashCmd";
+import { MassMuteMsgCmd } from "./commands/massmute/MassMuteMsgCmd";
+import { MassMuteSlashSlashCmd } from "./commands/massmute/MassMuteSlashCmd";
+import { MassUnbanMsgCmd } from "./commands/massunban/MassUnbanMsgCmd";
+import { MassUnbanSlashCmd } from "./commands/massunban/MassUnbanSlashCmd";
+import { MassWarnMsgCmd } from "./commands/masswarn/MassWarnMsgCmd";
+import { MassWarnSlashCmd } from "./commands/masswarn/MassWarnSlashCmd";
+import { MuteMsgCmd } from "./commands/mute/MuteMsgCmd";
+import { MuteSlashCmd } from "./commands/mute/MuteSlashCmd";
+import { NoteMsgCmd } from "./commands/note/NoteMsgCmd";
+import { NoteSlashCmd } from "./commands/note/NoteSlashCmd";
+import { UnbanMsgCmd } from "./commands/unban/UnbanMsgCmd";
+import { UnbanSlashCmd } from "./commands/unban/UnbanSlashCmd";
+import { UnhideCaseMsgCmd } from "./commands/unhidecase/UnhideCaseMsgCmd";
+import { UnhideCaseSlashCmd } from "./commands/unhidecase/UnhideCaseSlashCmd";
+import { UnmuteMsgCmd } from "./commands/unmute/UnmuteMsgCmd";
+import { UnmuteSlashCmd } from "./commands/unmute/UnmuteSlashCmd";
+import { UpdateMsgCmd } from "./commands/update/UpdateMsgCmd";
+import { UpdateSlashCmd } from "./commands/update/UpdateSlashCmd";
+import { WarnMsgCmd } from "./commands/warn/WarnMsgCmd";
+import { WarnSlashCmd } from "./commands/warn/WarnSlashCmd";
 import { AuditLogEvents } from "./events/AuditLogEvents";
 import { CreateBanCaseOnManualBanEvt } from "./events/CreateBanCaseOnManualBanEvt";
 import { CreateUnbanCaseOnManualUnbanEvt } from "./events/CreateUnbanCaseOnManualUnbanEvt";
 import { PostAlertOnMemberJoinEvt } from "./events/PostAlertOnMemberJoinEvt";
 import { banUserId } from "./functions/banUserId";
 import { clearTempban } from "./functions/clearTempban";
-import { hasMutePermission } from "./functions/hasMutePerm";
+import {
+  hasBanPermission,
+  hasMutePermission,
+  hasNotePermission,
+  hasWarnPermission,
+} from "./functions/hasModActionPerm";
 import { kickMember } from "./functions/kickMember";
 import { offModActionsEvent } from "./functions/offModActionsEvent";
 import { onModActionsEvent } from "./functions/onModActionsEvent";
 import { updateCase } from "./functions/updateCase";
 import { warnMember } from "./functions/warnMember";
-import { BanOptions, ConfigSchema, KickOptions, ModActionsPluginType, WarnOptions } from "./types";
-
-type AttachmentLinkReactionType = "none" | "warn" | "restrict" | null | undefined;
+import {
+  AttachmentLinkReactionType,
+  BanOptions,
+  KickOptions,
+  ModActionsPluginType,
+  WarnOptions,
+  modActionsSlashGroup,
+  zModActionsConfig,
+} from "./types";
 
 const defaultOptions = {
   config: {
@@ -73,6 +105,8 @@ const defaultOptions = {
     warn_notify_message:
       "The user already has **{priorWarnings}** warnings!\n Please check their prior cases and assess whether or not to warn anyways.\n Proceed with the warning?",
     ban_delete_message_days: 1,
+    attachment_link_reaction: "warn" as AttachmentLinkReactionType,
+    attachment_storing_channel: null,
 
     can_note: false,
     can_warn: false,
@@ -94,7 +128,6 @@ const defaultOptions = {
     reason_aliases: {},
     embed_colour: 0x2b2d31,
     embed_color: 0x2b2d31,
-    attachment_link_reaction: "warn" as AttachmentLinkReactionType,
   },
   overrides: [
     {
@@ -133,40 +166,71 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
     description: trimPluginDescription(`
       This plugin contains the 'typical' mod actions such as warning, muting, kicking, banning, etc.
     `),
-    configSchema: ConfigSchema,
+    configSchema: zModActionsConfig,
   },
 
   dependencies: () => [TimeAndDatePlugin, CasesPlugin, MutesPlugin, LogsPlugin],
-  configParser: makeIoTsConfigParser(ConfigSchema),
+  configParser: (input) => zModActionsConfig.parse(input),
   defaultOptions,
 
   events: [CreateBanCaseOnManualBanEvt, CreateUnbanCaseOnManualUnbanEvt, PostAlertOnMemberJoinEvt, AuditLogEvents],
 
+  slashCommands: [
+    modActionsSlashGroup({
+      name: "mod",
+      description: "Moderation actions",
+      defaultMemberPermissions: "0",
+      subcommands: [
+        { type: "slash", ...AddCaseSlashCmd },
+        { type: "slash", ...BanSlashCmd },
+        { type: "slash", ...CaseSlashCmd },
+        { type: "slash", ...CasesSlashCmd },
+        { type: "slash", ...DeleteCaseSlashCmd },
+        { type: "slash", ...ForceBanSlashCmd },
+        { type: "slash", ...ForceMuteSlashCmd },
+        { type: "slash", ...ForceUnmuteSlashCmd },
+        { type: "slash", ...HideCaseSlashCmd },
+        { type: "slash", ...KickSlashCmd },
+        { type: "slash", ...MassBanSlashCmd },
+        { type: "slash", ...MassKickSlashCmd },
+        { type: "slash", ...MassMuteSlashSlashCmd },
+        { type: "slash", ...MassUnbanSlashCmd },
+        { type: "slash", ...MassWarnSlashCmd },
+        { type: "slash", ...MuteSlashCmd },
+        { type: "slash", ...NoteSlashCmd },
+        { type: "slash", ...UnbanSlashCmd },
+        { type: "slash", ...UnhideCaseSlashCmd },
+        { type: "slash", ...UnmuteSlashCmd },
+        { type: "slash", ...UpdateSlashCmd },
+        { type: "slash", ...WarnSlashCmd },
+      ],
+    }),
+  ],
+
   messageCommands: [
-    UpdateCmd,
-    NoteCmd,
-    WarnCmd,
-    MuteCmd,
-    ForcemuteCmd,
-    UnmuteCmd,
-    ForceUnmuteCmd,
-    KickCmd,
-    SoftbanCmd,
-    BanCmd,
-    UnbanCmd,
-    ForcebanCmd,
-    MassbanCmd,
-    MasskickCmd,
-    MassmuteCmd,
-    MassunbanCmd,
-    MassWarnCmd,
-    AddCaseCmd,
-    CaseCmd,
-    CasesUserCmd,
-    CasesModCmd,
-    HideCaseCmd,
-    UnhideCaseCmd,
-    DeleteCaseCmd,
+    UpdateMsgCmd,
+    NoteMsgCmd,
+    WarnMsgCmd,
+    MuteMsgCmd,
+    ForceMuteMsgCmd,
+    UnmuteMsgCmd,
+    ForceUnmuteMsgCmd,
+    KickMsgCmd,
+    BanMsgCmd,
+    UnbanMsgCmd,
+    ForceBanMsgCmd,
+    MassBanMsgCmd,
+    MassKickMsgCmd,
+    MassMuteMsgCmd,
+    MassUnbanMsgCmd,
+    MassWarnMsgCmd,
+    AddCaseMsgCmd,
+    CaseMsgCmd,
+    CasesUserMsgCmd,
+    CasesModMsgCmd,
+    HideCaseMsgCmd,
+    UnhideCaseMsgCmd,
+    DeleteCaseMsgCmd,
   ],
 
   public: {
@@ -174,17 +238,17 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
       return (
         reason: string,
         reasonWithAttachments: string,
-        member: GuildMember | null,
-        user?: User | null,
+        user: User | UnknownUser,
+        member?: GuildMember | null,
         warnOptions?: WarnOptions,
       ) => {
-        warnMember(pluginData, reason, reasonWithAttachments, member, user, warnOptions);
+        return warnMember(pluginData, reason, reasonWithAttachments, user, member, warnOptions);
       };
     },
 
     kickMember(pluginData) {
       return (member: GuildMember, reason: string, reasonWithAttachments: string, kickOptions?: KickOptions) => {
-        kickMember(pluginData, member, reason, reasonWithAttachments, kickOptions);
+        return kickMember(pluginData, member, reason, reasonWithAttachments, kickOptions);
       };
     },
 
@@ -196,19 +260,37 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
         banOptions?: BanOptions,
         banTime?: number,
       ) => {
-        banUserId(pluginData, userId, reason, reasonWithAttachments, banOptions, banTime);
+        return banUserId(pluginData, userId, reason, reasonWithAttachments, banOptions, banTime);
       };
     },
 
     updateCase(pluginData) {
       return (msg: Message, caseNumber: number | null, note: string) => {
-        updateCase(pluginData, msg, { caseNumber, note });
+        return updateCase(pluginData, msg, msg.author, caseNumber ?? undefined, note, [...msg.attachments.values()]);
+      };
+    },
+
+    hasNotePermission(pluginData) {
+      return (member: GuildMember, channelId: Snowflake) => {
+        return hasNotePermission(pluginData, member, channelId);
+      };
+    },
+
+    hasWarnPermission(pluginData) {
+      return (member: GuildMember, channelId: Snowflake) => {
+        return hasWarnPermission(pluginData, member, channelId);
       };
     },
 
     hasMutePermission(pluginData) {
       return (member: GuildMember, channelId: Snowflake) => {
         return hasMutePermission(pluginData, member, channelId);
+      };
+    },
+
+    hasBanPermission(pluginData) {
+      return (member: GuildMember, channelId: Snowflake) => {
+        return hasBanPermission(pluginData, member, channelId);
       };
     },
 

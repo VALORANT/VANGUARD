@@ -1,5 +1,5 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
-import { sendErrorMessage } from "../../../pluginUtils";
+import { CommonPlugin } from "../../Common/CommonPlugin";
 import { getUserInfoEmbed } from "../functions/getUserInfoEmbed";
 import { utilityCmd } from "../types";
 
@@ -19,9 +19,9 @@ export const UserInfoCmd = utilityCmd({
     const userId = args.user?.id || message.author.id;
     const config = pluginData.config.get();
     const embedColour = config.embed_colour ?? config.embed_color ?? 0x2b2d31;
-    const embed = await getUserInfoEmbed(pluginData, userId, args.compact, message.author.id);
+    const embed = await getUserInfoEmbed(pluginData, userId, args.compact);
     if (!embed) {
-      sendErrorMessage(pluginData, message.channel, "User not found");
+      pluginData.getPlugin(CommonPlugin).sendErrorMessage(message, "User not found");
       return;
     }
 

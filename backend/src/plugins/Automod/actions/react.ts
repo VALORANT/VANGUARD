@@ -1,5 +1,5 @@
+import z from "zod";
 import { GuildTextBasedChannel, PermissionsBitField, Snowflake } from "discord.js";
-import * as t from "io-ts";
 import { isEmoji, verboseChannelMention } from "../../../utils";
 import { hasDiscordPermissions } from "../../../utils/hasDiscordPermissions";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
@@ -7,9 +7,7 @@ import { automodAction } from "../helpers";
 import { AutomodContext } from "../types";
 
 export const ReactAction = automodAction({
-  configType: t.union([t.string, t.array(t.string)]),
-
-  defaultConfig: "",
+  configSchema: z.union([z.string(), z.array(z.string())]).default(""),
 
   async apply({ pluginData, contexts, actionConfig, ruleName }) {
     const contextsWithTextChannels = contexts

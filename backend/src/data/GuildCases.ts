@@ -89,8 +89,15 @@ export class GuildCases extends BaseGuildRepository {
     });
   }
 
-  async getByUserId(userId: string, areCasesGlobal: boolean): Promise<Case[]> {
-    const where: FindOptionsWhere<Case> = { user_id: userId };
+  async getByUserId(
+    userId: string,
+    areCasesGlobal: boolean,
+    filters: Omit<FindOptionsWhere<Case>, "guild_id" | "user_id"> = {},
+  ): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = {
+      user_id: userId,
+      ...filters,
+    };
 
     if (!areCasesGlobal) {
       where.guild_id = this.guildId;
@@ -115,18 +122,56 @@ export class GuildCases extends BaseGuildRepository {
     });
   }
 
-  async getTotalCasesByModId(modId: string, areCasesGlobal: boolean): Promise<number> {
-    const where: FindOptionsWhere<Case> = { mod_id: modId, is_hidden: false };
+  async getRecentByUserId(userId: string, count: number, areCasesGlobal: boolean, skip = 0): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = {
+      user_id: userId,
+    };
 
     if (!areCasesGlobal) {
       where.guild_id = this.guildId;
     }
 
-    return this.cases.count({ where });
+    return this.cases.find({
+      relations: this.getRelations(),
+      where,
+      skip,
+      take: count,
+      order: {
+        case_number: "DESC",
+      },
+    });
   }
 
-  async getRecentByModId(modId: string, count: number, areCasesGlobal: boolean, skip = 0): Promise<Case[]> {
-    const where: FindOptionsWhere<Case> = { mod_id: modId, is_hidden: false };
+  async getTotalCasesByModId(
+    modId: string,
+    areCasesGlobal: boolean,
+    filters: Omit<FindOptionsWhere<Case>, "guild_id" | "mod_id" | "is_hidden"> = {},
+  ): Promise<number> {
+    const where: FindOptionsWhere<Case> = { mod_id: modId, is_hidden: false, ...filters };
+
+    if (!areCasesGlobal) {
+      where.guild_id = this.guildId;
+    }
+
+    return this.cases.count({ relations: this.getRelations(), where });
+  }
+
+  async getRecentByModId(
+    modId: string,
+    count: number,
+    areCasesGlobal: boolean,
+    skip = 0,
+    filters: Omit<FindOptionsWhere<Case>, "guild_id" | "mod_id"> = {},
+  ): Promise<Case[]> {
+    const where: FindOptionsWhere<Case> = {
+      mod_id: modId,
+      is_hidden: false,
+      ...filters,
+    };
+
+    if (where.is_hidden === true) {
+      delete where.is_hidden;
+    }
 
     if (!areCasesGlobal) {
       where.guild_id = this.guildId;

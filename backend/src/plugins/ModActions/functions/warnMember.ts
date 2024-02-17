@@ -1,8 +1,15 @@
 import { GuildMember, Snowflake, User } from "discord.js";
 import { GuildPluginData } from "knub";
 import { CaseTypes } from "../../../data/CaseTypes";
-import { TemplateSafeValueContainer, renderTemplate } from "../../../templateFormatter";
-import { UserNotificationResult, createUserNotificationError, notifyUser, resolveUser, ucfirst } from "../../../utils";
+import { TemplateParseError, TemplateSafeValueContainer, renderTemplate } from "../../../templateFormatter";
+import {
+  UserNotificationResult,
+  createUserNotificationError,
+  notifyUser,
+  resolveUser,
+  ucfirst,
+  UnknownUser,
+} from "../../../utils";
 import { userToTemplateSafeUser } from "../../../utils/templateSafeObjects";
 import { waitForButtonConfirm } from "../../../utils/waitForInteraction";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
@@ -14,8 +21,8 @@ export async function warnMember(
   pluginData: GuildPluginData<ModActionsPluginType>,
   reason: string,
   reasonWithAttachments: string,
-  member: GuildMember | null,
-  user?: User | null,
+  user: User | UnknownUser,
+  member?: GuildMember | null,
   warnOptions: WarnOptions = {},
 ): Promise<WarnResult> {
   if (!member && !user) {
@@ -31,16 +38,28 @@ export async function warnMember(
   let notifyResult: UserNotificationResult;
 
   if (config.warn_message) {
-    const warnMessage = await renderTemplate(
-      config.warn_message,
-      new TemplateSafeValueContainer({
-        guildName: pluginData.guild.name,
-        reason: reasonWithAttachments,
-        moderator: warnOptions.caseArgs?.modId
-          ? userToTemplateSafeUser(await resolveUser(pluginData.client, warnOptions.caseArgs.modId))
-          : null,
-      }),
-    );
+    let warnMessage: string;
+    try {
+      warnMessage = await renderTemplate(
+        config.warn_message,
+        new TemplateSafeValueContainer({
+          guildName: pluginData.guild.name,
+          reason: reasonWithAttachments,
+          moderator: warnOptions.caseArgs?.modId
+            ? userToTemplateSafeUser(await resolveUser(pluginData.client, warnOptions.caseArgs.modId))
+            : null,
+        }),
+      );
+    } catch (err) {
+      if (err instanceof TemplateParseError) {
+        return {
+          status: "failed",
+          error: `Invalid warn_message format: ${err.message}`,
+        };
+      }
+      throw err;
+    }
+
     const contactMethods = warnOptions?.contactMethods
       ? warnOptions.contactMethods
       : getDefaultContactMethods(pluginData, "warn");
@@ -50,20 +69,20 @@ export async function warnMember(
   }
 
   if (!notifyResult.success) {
-    if (warnOptions.retryPromptChannel && pluginData.guild.channels.resolve(warnOptions.retryPromptChannel.id)) {
-      const reply = await waitForButtonConfirm(
-        warnOptions.retryPromptChannel,
-        { content: "Failed to message the user. Log the warning anyway?" },
-        { confirmText: "Yes", cancelText: "No", restrictToId: warnOptions.caseArgs?.modId },
-      );
+    if (!warnOptions.retryPromptContext) {
+      return {
+        status: "failed",
+        error: "Failed to message user",
+      };
+    }
 
-      if (!reply) {
-        return {
-          status: "failed",
-          error: "Failed to message user",
-        };
-      }
-    } else if (!warnOptions.silentErrors) {
+    const reply = await waitForButtonConfirm(
+      warnOptions.retryPromptContext,
+      { content: "Failed to message the user. Log the warning anyway?" },
+      { confirmText: "Yes", cancelText: "No", restrictToId: warnOptions.caseArgs?.modId },
+    );
+
+    if (!reply) {
       return {
         status: "failed",
         error: "Failed to message user",

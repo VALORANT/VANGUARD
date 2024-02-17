@@ -5,8 +5,6 @@ import { env } from "../env";
 import { simpleDiscordAPIRequest } from "./auth";
 import { notFound } from "./responses";
 
-const DISCORD_API_URL = "https://discord.com/api";
-
 export function initArchives(app: express.Express) {
   const archives = new GuildArchives(null);
 

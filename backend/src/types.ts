@@ -1,41 +1,12 @@
-import * as t from "io-ts";
-import { BaseConfig, Knub } from "knub";
+import { Knub } from "knub";
+import z from "zod";
+import { zSnowflake } from "./utils";
 
-export interface ZeppelinGuildConfig extends BaseConfig {
-  success_emoji?: string;
-  error_emoji?: string;
-
-  // Deprecated
-  timezone?: string;
-  date_formats?: any;
-}
-
-export const ZeppelinGuildConfigSchema = t.type({
+export const zZeppelinGuildConfig = z.strictObject({
   // From BaseConfig
-  prefix: t.string,
-  levels: t.record(t.string, t.number),
-  plugins: t.record(t.string, t.unknown),
-
-  // From ZeppelinGuildConfig
-  success_emoji: t.string,
-  error_emoji: t.string,
-
-  // Deprecated
-  timezone: t.string,
-  date_formats: t.unknown,
-});
-export const PartialZeppelinGuildConfigSchema = t.partial(ZeppelinGuildConfigSchema.props);
-
-export interface ZeppelinGlobalConfig extends BaseConfig {
-  url: string;
-  dashboard_url: string;
-  owners?: string[];
-}
-
-export const ZeppelinGlobalConfigSchema = t.type({
-  url: t.string,
-  owners: t.array(t.string),
-  plugins: t.record(t.string, t.unknown),
+  prefix: z.string().optional(),
+  levels: z.record(zSnowflake, z.number()).optional(),
+  plugins: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type TZeppelinKnub = Knub;

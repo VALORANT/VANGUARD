@@ -13,7 +13,6 @@ import {
   User,
 } from "discord.js";
 import { GuildPluginData } from "knub";
-import { UnknownUser, renderUsername } from "src/utils";
 import { Case } from "../data/entities/Case";
 import { CounterValue } from "../data/entities/CounterValue";
 import {
@@ -28,6 +27,7 @@ import {
   TypedTemplateSafeValueContainer,
   ingestDataIntoTemplateSafeValueContainer,
 } from "../templateFormatter";
+import { UnknownUser, renderUsername } from "../utils";
 
 type InputProps<T> = Omit<
   {

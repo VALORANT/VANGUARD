@@ -1,6 +1,5 @@
 import { APIEmbed } from "discord.js";
 import { GuildPluginData } from "knub";
-import moment from "moment-timezone";
 import { CaseTypes } from "../../../data/CaseTypes";
 import { areCasesGlobal } from "../../../pluginUtils";
 import {
@@ -15,7 +14,6 @@ import {
   trimLines,
   UnknownUser,
 } from "../../../utils";
-import { TimeAndDatePlugin } from "../../TimeAndDate/TimeAndDatePlugin";
 import { UtilityPluginType } from "../types";
 
 const MAX_ROLES_TO_DISPLAY = 15;
@@ -29,7 +27,6 @@ export async function getUserInfoEmbed(
   pluginData: GuildPluginData<UtilityPluginType>,
   userId: string,
   compact = false,
-  requestMemberId?: string,
 ): Promise<APIEmbed | null> {
   const user = await resolveUser(pluginData.client, userId);
   if (!user || user instanceof UnknownUser) {
@@ -38,7 +35,7 @@ export async function getUserInfoEmbed(
 
   const member = await resolveMember(pluginData.client, pluginData.guild, user.id);
 
-  const timeAndDate = pluginData.getPlugin(TimeAndDatePlugin);
+  const config = pluginData.config.get();
   const embed: EmbedWith<"fields"> = {
     fields: [],
   };
@@ -47,36 +44,21 @@ export async function getUserInfoEmbed(
     name: `${user.bot ? "Bot" : "User"}:  ${renderUsername(user)}`,
   };
 
-  const createdAt = moment.utc(user.createdAt, "x");
-  const tzCreatedAt = requestMemberId
-    ? await timeAndDate.inMemberTz(requestMemberId, createdAt)
-    : timeAndDate.inGuildTz(createdAt);
-  const prettyCreatedAt = tzCreatedAt.format(timeAndDate.getDateFormat("pretty_datetime"));
-  let prettyJoinedAt = "";
-
-  if (member) {
-    const joinedAt = moment.utc(member.joinedTimestamp!, "x");
-    const tzJoinedAt = requestMemberId
-      ? await timeAndDate.inMemberTz(requestMemberId, joinedAt)
-      : timeAndDate.inGuildTz(joinedAt);
-
-    prettyJoinedAt = tzJoinedAt.format(timeAndDate.getDateFormat("pretty_datetime"));
-  }
-
-  embed.author.icon_url = (member ?? user).displayAvatarURL();
+  const avatarURL = (member ?? user).displayAvatarURL();
+  embed.author.icon_url = avatarURL;
 
   if (compact) {
     embed.fields.push({
       name: preEmbedPadding + `${user.bot ? "Bot" : "User"} information`,
       value: trimLines(`
-          Profile: <@!${user.id}>
-          Created: **<t:${Math.round(user.createdTimestamp / 1000)}:R>** (\`${prettyCreatedAt}\`)
-          `),
+        Profile: <@!${user.id}>
+        ${config.emojis.account_created} Created: **<t:${Math.round(user.createdTimestamp / 1000)}:R>**
+      `),
     });
     if (member) {
-      embed.fields[0].value += `\n${user.bot ? "Added" : "Joined"}: **<t:${Math.round(
+      embed.fields[0].value += `\n${config.emojis.member_joined} ${user.bot ? "Added" : "Joined"}: **<t:${Math.round(
         member.joinedTimestamp! / 1000,
-      )}:R>** (\`${prettyJoinedAt}\`)`;
+      )}:R>**`;
     } else {
       embed.fields.push({
         name: preEmbedPadding + "!! NOTE !!",
@@ -86,8 +68,6 @@ export async function getUserInfoEmbed(
 
     return embed;
   }
-
-  const config = pluginData.config.get();
   const userInfoLines = [`ID: \`${user.id}\`\n`, `Username: **${user.username}**`];
 
   if (user.discriminator !== "0") userInfoLines.push(`Discriminator: **${user.discriminator}**`);
@@ -95,11 +75,7 @@ export async function getUserInfoEmbed(
   if (member) userInfoLines.push(`Server Nickname: **${member.nickname ?? "*no nickname defined*"}**`);
   userInfoLines.push(`Mention: <@!${user.id}>\n`);
 
-  userInfoLines.push(
-    `${config.emojis.account_created} Created: **<t:${Math.round(
-      user.createdTimestamp / 1000,
-    )}:R>** (\`${prettyCreatedAt}\`)`,
-  );
+  userInfoLines.push(`${config.emojis.account_created} Created: **<t:${Math.round(user.createdTimestamp / 1000)}:R>**`);
 
   if (member) {
     const roles = Array.from(member.roles.cache.values()).filter((r) => r.id !== pluginData.guild.id);
@@ -108,7 +84,7 @@ export async function getUserInfoEmbed(
     userInfoLines.push(
       `${config.emojis.member_joined} ${user.bot ? "Added" : "Joined"}: **<t:${Math.round(
         member.joinedTimestamp! / 1000,
-      )}:R>** (\`${prettyJoinedAt}\`)`,
+      )}:R>**`,
     );
 
     userInfoLines.push(`\n${roles.length > 0 ? "Roles: " + trimRoles(roles.map((r) => `<@&${r.id}>`)) : ""}`);

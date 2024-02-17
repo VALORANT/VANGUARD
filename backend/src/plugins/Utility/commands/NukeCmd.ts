@@ -2,10 +2,11 @@ import { Message, TextChannel } from "discord.js";
 import { GuildPluginData } from "knub";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { humanizeDurationShort } from "../../../humanizeDurationShort";
-import { canActOn, sendErrorMessage, sendSuccessMessage } from "../../../pluginUtils";
+import { canActOn } from "../../../pluginUtils";
 import { DAYS, HOURS, SECONDS, noop, resolveMember } from "../../../utils";
 import { cleanMessages } from "../functions/cleanMessages";
 import { UtilityPluginType, utilityCmd } from "../types";
+import { CommonPlugin } from "../../Common/CommonPlugin";
 
 const MAX_NUKE_TIME = 1 * DAYS;
 const DEFAULT_NUKE_TIME = 2 * HOURS;
@@ -49,19 +50,21 @@ export const NukeCmd = utilityCmd({
 
   async run({ message: msg, args, pluginData }) {
     if (args.time && args.time > MAX_NUKE_TIME) {
-      sendErrorMessage(pluginData, msg.channel, `Maximum nuke time is ${humanizeDurationShort(MAX_NUKE_TIME)}`);
+      pluginData
+        .getPlugin(CommonPlugin)
+        .sendErrorMessage(msg, `Maximum nuke time is ${humanizeDurationShort(MAX_NUKE_TIME)}`);
       return;
     }
 
     if (args.user === pluginData.client.user?.id) {
-      sendErrorMessage(pluginData, msg.channel, `I don't want to nuke my own messages!`);
+      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `I don't want to nuke my own messages!`);
       return;
     }
 
     const memberToNuke = await resolveMember(pluginData.client, pluginData.guild, args.user);
 
     if (memberToNuke && !canActOn(pluginData, msg.member, memberToNuke)) {
-      sendErrorMessage(pluginData, msg.channel, `You cannot nuke this member's messages.`);
+      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `You cannot nuke this member's messages.`);
       return;
     }
 
@@ -71,7 +74,11 @@ export const NukeCmd = utilityCmd({
     const messagesToNuke = await pluginData.state.savedMessages.getRecentFromUserByChannel(args.user, nukeTime);
 
     if (messagesToNuke.length < 1) {
-      await cleanup(nukingMessage, msg, await sendErrorMessage(pluginData, msg.channel, `Found no messages to nuke!`));
+      await cleanup(
+        nukingMessage,
+        msg,
+        await pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `Found no messages to nuke!`),
+      );
 
       return;
     }
@@ -98,6 +105,10 @@ export const NukeCmd = utilityCmd({
       );
     }
 
-    await cleanup(nukingMessage, msg, await sendSuccessMessage(pluginData, msg.channel, responseText.join("\n")));
+    await cleanup(
+      nukingMessage,
+      msg,
+      await pluginData.getPlugin(CommonPlugin).sendSuccessMessage(msg, responseText.join("\n")),
+    );
   },
 });

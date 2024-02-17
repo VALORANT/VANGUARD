@@ -1,10 +1,10 @@
 import { Snowflake } from "discord.js";
 import { getChannelId, getRoleId } from "knub/helpers";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
-import { sendErrorMessage } from "../../../pluginUtils";
 import { isValidSnowflake, noop, parseInviteCodeInput, resolveInvite, resolveUser } from "../../../utils";
 import { canReadChannel } from "../../../utils/canReadChannel";
 import { resolveMessageTarget } from "../../../utils/resolveMessageTarget";
+import { CommonPlugin } from "../../Common/CommonPlugin";
 import { getChannelInfoEmbed } from "../functions/getChannelInfoEmbed";
 import { getCustomEmojiId } from "../functions/getCustomEmojiId";
 import { getEmojiInfoEmbed } from "../functions/getEmojiInfoEmbed";
@@ -68,7 +68,7 @@ export const InfoCmd = utilityCmd({
     if (userCfg.can_userinfo) {
       const user = await resolveUser(pluginData.client, value);
       if (user && userCfg.can_userinfo) {
-        const embed = await getUserInfoEmbed(pluginData, user.id, Boolean(args.compact), message.author.id);
+        const embed = await getUserInfoEmbed(pluginData, user.id, Boolean(args.compact));
         if (embed) {
           message.channel.send({ embeds: [{ color: embedColour, ...embed }] });
           return;
@@ -142,16 +142,17 @@ export const InfoCmd = utilityCmd({
 
     // 9. Arbitrary ID
     if (isValidSnowflake(value) && userCfg.can_snowflake) {
-      const embed = await getSnowflakeInfoEmbed(pluginData, value, true);
+      const embed = await getSnowflakeInfoEmbed(value, true);
       message.channel.send({ embeds: [{ color: embedColour, ...embed }] });
       return;
     }
 
     // 10. No can do
-    sendErrorMessage(
-      pluginData,
-      message.channel,
-      "Could not find anything with that value or you are lacking permission for the snowflake type",
-    );
+    pluginData
+      .getPlugin(CommonPlugin)
+      .sendErrorMessage(
+        message,
+        "Could not find anything with that value or you are lacking permission for the snowflake type",
+      );
   },
 });

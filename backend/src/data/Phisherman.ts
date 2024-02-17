@@ -166,8 +166,8 @@ export async function getPhishermanDomainInfo(domain: string): Promise<Phisherma
       freshData === null
         ? UNKNOWN_DOMAIN_CACHE_LIFETIME
         : phishermanDomainIsSafe(freshData)
-        ? SAFE_DOMAIN_CACHE_LIFETIME
-        : DETECTED_DOMAIN_CACHE_LIFETIME;
+          ? SAFE_DOMAIN_CACHE_LIFETIME
+          : DETECTED_DOMAIN_CACHE_LIFETIME;
     memoryCache.set(domain, {
       info: freshData,
       expires: Date.now() + expiryTime,

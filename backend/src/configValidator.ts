@@ -1,9 +1,9 @@
-import { ConfigValidationError, PluginConfigManager } from "knub";
-import moment from "moment-timezone";
+import { BaseConfig, ConfigValidationError, PluginConfigManager } from "knub";
+import { ZodError } from "zod";
 import { ZeppelinPlugin } from "./plugins/ZeppelinPlugin";
 import { guildPlugins } from "./plugins/availablePlugins";
-import { PartialZeppelinGuildConfigSchema, ZeppelinGuildConfig } from "./types";
-import { StrictValidationError, decodeAndValidateStrict } from "./validatorUtils";
+import { zZeppelinGuildConfig } from "./types";
+import { formatZodIssue } from "./utils/formatZodIssue";
 
 const pluginNameToPlugin = new Map<string, ZeppelinPlugin>();
 for (const plugin of guildPlugins) {
@@ -11,17 +11,12 @@ for (const plugin of guildPlugins) {
 }
 
 export async function validateGuildConfig(config: any): Promise<string | null> {
-  const validationResult = decodeAndValidateStrict(PartialZeppelinGuildConfigSchema, config);
-  if (validationResult instanceof StrictValidationError) return validationResult.getErrors();
-
-  const guildConfig = config as ZeppelinGuildConfig;
-
-  if (guildConfig.timezone) {
-    const validTimezones = moment.tz.names();
-    if (!validTimezones.includes(guildConfig.timezone)) {
-      return `Invalid timezone: ${guildConfig.timezone}`;
-    }
+  const validationResult = zZeppelinGuildConfig.safeParse(config);
+  if (!validationResult.success) {
+    return validationResult.error.issues.map(formatZodIssue).join("\n");
   }
+
+  const guildConfig = config as BaseConfig;
 
   if (guildConfig.plugins) {
     for (const [pluginName, pluginOptions] of Object.entries(guildConfig.plugins)) {
@@ -41,7 +36,10 @@ export async function validateGuildConfig(config: any): Promise<string | null> {
       try {
         await configManager.init();
       } catch (err) {
-        if (err instanceof ConfigValidationError || err instanceof StrictValidationError) {
+        if (err instanceof ZodError) {
+          return `${pluginName}: ${err.issues.map(formatZodIssue).join("\n")}`;
+        }
+        if (err instanceof ConfigValidationError) {
           return `${pluginName}: ${err.message}`;
         }
 

@@ -9,7 +9,10 @@ const isTimeoutError = (a): a is TimeoutError => {
 };
 
 export class RegExpTimeoutError extends Error {
-  constructor(message: string, public elapsedTimeMs: number) {
+  constructor(
+    message: string,
+    public elapsedTimeMs: number,
+  ) {
     super(message);
   }
 }
@@ -36,6 +39,7 @@ const REGEX_FAIL_TO_COOLDOWN_COUNT = 5; // If a regex times out this many times.
 const REGEX_FAIL_DECAY_TIME = 2 * MINUTES; // ...in this interval...
 const REGEX_FAIL_COOLDOWN = 2 * MINUTES + 30 * SECONDS; // ...it goes on cooldown for this long
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface RegExpRunner {
   on(event: "timeout", listener: (regexSource: string, timeoutMs: number) => void);
   on(event: "repeatedTimeout", listener: (regexSource: string, timeoutMs: number, failTimes: number) => void);
@@ -45,6 +49,7 @@ export interface RegExpRunner {
  * Leverages RegExpWorker to run regular expressions in worker threads with a timeout.
  * Repeatedly failing regexes are put on a cooldown where requests to execute them are ignored.
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class RegExpRunner extends EventEmitter {
   private _worker: RegExpWorker | null;
   private readonly _failedTimesInterval: Timeout;

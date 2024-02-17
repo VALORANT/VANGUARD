@@ -21,5 +21,6 @@ function char_select(char) {
   }
 }
 export function sql_escape_string(str) {
-  return str.replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, char_select);
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/[\0\x08\x09\x1a\n\r"'\\%]/g, char_select);
 }

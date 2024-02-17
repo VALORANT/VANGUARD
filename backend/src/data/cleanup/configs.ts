@@ -18,8 +18,9 @@ export async function cleanupConfigs() {
   // >1 month old: 1 config retained per month
   const oneMonthCutoff = moment.utc().subtract(30, "days").format(DBDateFormat);
   do {
-    rows = await dataSource.query(
-      `
+    rows = await dataSource
+      .query(
+        `
       WITH _configs
       AS (
         SELECT
@@ -58,8 +59,9 @@ export async function cleanupConfigs() {
   // >2 weeks old: 1 config retained per day
   const twoWeekCutoff = moment.utc().subtract(2, "weeks").format(DBDateFormat);
   do {
-    rows = await dataSource.query(
-      `
+    rows = await dataSource
+      .query(
+        `
       WITH _configs
       AS (
         SELECT
