@@ -4,6 +4,7 @@ import { waitForReply } from "knub/helpers";
 import { CaseTypes } from "../../../../data/CaseTypes";
 import { LogType } from "../../../../data/LogType";
 import { getContextChannel, sendContextResponse } from "../../../../pluginUtils";
+import { MINUTES } from "../../../../utils";
 import { CasesPlugin } from "../../../Cases/CasesPlugin";
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { LogsPlugin } from "../../../Logs/LogsPlugin";
@@ -12,7 +13,6 @@ import { handleAttachmentLinkDetectionAndGetRestriction } from "../attachmentLin
 import { formatReasonWithMessageLinkForAttachments } from "../formatReasonForAttachments";
 import { ignoreEvent } from "../ignoreEvent";
 import { isBanned } from "../isBanned";
-import { MINUTES } from "../../../../utils";
 
 export async function actualMassUnbanCmd(
   pluginData: GuildPluginData<ModActionsPluginType>,

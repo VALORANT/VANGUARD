@@ -40,7 +40,7 @@ export async function waitForButtonConfirm(
           : context.reply.bind(context)
         : "send" in context
           ? context.send.bind(context)
-          : context.channel.send.bind(context);
+          : context.channel.send.bind(context.channel);
     };
     const extraParameters = contextIsInteraction ? { fetchReply: true } : {};
     const message = await sendMethod()({ ...toPost, components: [row], ...extraParameters });

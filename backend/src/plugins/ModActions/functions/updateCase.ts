@@ -7,8 +7,8 @@ import { CasesPlugin } from "../../Cases/CasesPlugin";
 import { CommonPlugin } from "../../Common/CommonPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
 import { ModActionsPluginType } from "../types";
-import { formatReasonWithMessageLinkForAttachments } from "./formatReasonForAttachments";
 import { handleAttachmentLinkDetectionAndGetRestriction } from "./attachmentLinkReaction";
+import { formatReasonWithMessageLinkForAttachments } from "./formatReasonForAttachments";
 
 export async function updateCase(
   pluginData: GuildPluginData<ModActionsPluginType>,
