@@ -138,7 +138,7 @@ async function casesUserCmd(
         icon_url: user instanceof UnknownUser ? undefined : user.displayAvatarURL(),
       },
       color: embedColour,
-      description: linesInChunk.join("\n"),
+      description: linesInChunk.join("\n\n"),
       fields: [...(isLastChunk ? [footerField] : [])],
     } satisfies APIEmbed;
 
@@ -217,7 +217,7 @@ async function casesModCmd(
           icon_url: mod instanceof UnknownUser ? undefined : mod.displayAvatarURL(),
         },
         color: embedColour,
-        description: lines.join("\n"),
+        description: lines.join("\n\n"),
         fields: [
           {
             name: emptyEmbedValue,
