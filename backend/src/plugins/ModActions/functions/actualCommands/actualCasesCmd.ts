@@ -107,7 +107,7 @@ async function casesUserCmd(
   // Compact view (= regular message with a preview of each case)
   const lines = await asyncMap(casesToDisplay, (c) => casesPlugin.getCaseSummary(c, true, author.id));
   const prefix = getGuildPrefix(pluginData);
-  const linesPerChunk = 10;
+  const linesPerChunk = 7;
   const lineChunks = chunkArray(lines, linesPerChunk);
 
   const footerField = {
