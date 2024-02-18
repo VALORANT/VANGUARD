@@ -100,7 +100,7 @@ async function casesUserCmd(
   }
 
   if (expand) {
-    sendExpandedCases(pluginData, context, casesToDisplay.length, casesToDisplay, show);
+    await sendExpandedCases(pluginData, context, casesToDisplay.length, casesToDisplay, show);
     return;
   }
 
@@ -144,7 +144,7 @@ async function casesUserCmd(
       fields: [...(isLastChunk ? [footerField] : [])],
     } satisfies APIEmbed;
 
-    sendContextResponse(context, { embeds: [embed], ephemeral: !show });
+    await sendContextResponse(context, { embeds: [embed], ephemeral: !show });
   }
 }
 
@@ -190,11 +190,11 @@ async function casesModCmd(
         ? []
         : await casesPlugin.getRecentCasesByMod(modId ?? author.id, 8, areCasesGlobal(pluginData), 0, casesFilters);
 
-    sendExpandedCases(pluginData, context, totalCases, cases, show);
+    await sendExpandedCases(pluginData, context, totalCases, cases, show);
     return;
   }
 
-  createPaginatedMessage(
+  await createPaginatedMessage(
     pluginData.client,
     context,
     totalPages,
@@ -290,7 +290,7 @@ export async function actualCasesCmd(
   const sanitizedSearch = search ? search.replace(/[^a-zA-Z0-9]+/gu, "").toLowerCase() : null;
 
   user
-    ? casesUserCmd(
+    ? await casesUserCmd(
         pluginData,
         context,
         author.user,
@@ -303,7 +303,7 @@ export async function actualCasesCmd(
         show === true,
         sanitizedSearch,
       )
-    : casesModCmd(
+    : await casesModCmd(
         pluginData,
         context,
         author.user,
