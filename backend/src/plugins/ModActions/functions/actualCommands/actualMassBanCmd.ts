@@ -1,6 +1,5 @@
-import { ChatInputCommandInteraction, GuildMember, Message, Snowflake, User } from "discord.js";
+import { Attachment, ChatInputCommandInteraction, GuildMember, Message, Snowflake, User } from "discord.js";
 import { GuildPluginData } from "knub";
-import { waitForReply } from "knub/helpers";
 import { CaseTypes } from "../../../../data/CaseTypes";
 import { LogType } from "../../../../data/LogType";
 import { humanizeDurationShort } from "../../../../humanizeDurationShort";
@@ -22,6 +21,8 @@ export async function actualMassBanCmd(
   context: Message | ChatInputCommandInteraction,
   userIds: string[],
   author: GuildMember,
+  reason: string,
+  attachments: Attachment[],
 ) {
   // Limit to 100 users at once (arbitrary?)
   if (userIds.length > 100) {
@@ -29,26 +30,15 @@ export async function actualMassBanCmd(
     return;
   }
 
-  // Ask for ban reason (cleaner this way instead of trying to cram it into the args)
-  sendContextResponse(context, "Ban reason? `cancel` to cancel");
-  const banReasonReply = await waitForReply(pluginData.client, await getContextChannel(context), author.id);
-
-  if (!banReasonReply || !banReasonReply.content || banReasonReply.content.toLowerCase().trim() === "cancel") {
-    pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Cancelled");
-    return;
-  }
-
-  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, banReasonReply.content)) {
+  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, reason)) {
     return;
   }
 
   const config = pluginData.config.get();
   const shouldLogEachCase = pluginData.getPlugin(CasesPlugin).shouldLogEachMassBanCase();
-  const parsedReason = parseReason(pluginData.config.get(), banReasonReply.content);
-  const banReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, [
-    ...banReasonReply.attachments.values(),
-  ]);
-  const banReasonWithAttachments = formatReasonWithAttachments(parsedReason, [...banReasonReply.attachments.values()]);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const banReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, attachments);
+  const banReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   // Verify we can act on each of the users specified
   for (const userId of userIds) {
@@ -68,7 +58,7 @@ export async function actualMassBanCmd(
     pluginData.state.massbanQueue.length === 0
       ? "Banning..."
       : `Massban queued. Waiting for previous massban to finish (max wait ${maxWaitTimeFormatted}).`;
-  const loadingMsg = await sendContextResponse(context, initialLoadingText);
+  const loadingMsg = await sendContextResponse(context, { content: initialLoadingText, ephemeral: true });
 
   const waitTimeStart = performance.now();
   const waitingInterval = setInterval(() => {
@@ -82,11 +72,20 @@ export async function actualMassBanCmd(
     clearInterval(waitingInterval);
 
     if (pluginData.state.unloaded) {
-      void loadingMsg.delete().catch(noop);
+      if (isContextInteraction(context)) {
+        void context.deleteReply().catch(noop);
+      } else {
+        void loadingMsg.delete().catch(noop);
+      }
+
       return;
     }
 
-    void loadingMsg.edit("Banning...").catch(noop);
+    if (isContextInteraction(context)) {
+      void context.editReply("Banning...").catch(noop);
+    } else {
+      void loadingMsg.edit("Banning...").catch(noop);
+    }
 
     // Ban each user and count failed bans (if any)
     const startTime = performance.now();
@@ -159,15 +158,23 @@ export async function actualMassBanCmd(
 
       // Send a status update every 10 bans
       if ((i + 1) % 10 === 0) {
-        loadingMsg.edit(`Banning... ${i + 1}/${userIds.length}`).catch(noop);
+        const newLoadingMessageContent = `Banning... ${i + 1}/${userIds.length}`;
+
+        if (isContextInteraction(context)) {
+          void context.editReply(newLoadingMessageContent).catch(noop);
+        } else {
+          loadingMsg.edit(newLoadingMessageContent).catch(noop);
+        }
       }
     }
 
     const totalTime = performance.now() - startTime;
     const formattedTimeTaken = humanizeDurationShort(totalTime, { round: true });
 
-    // Clear loading indicator
-    loadingMsg.delete().catch(noop);
+    if (!isContextInteraction(context)) {
+      // Clear loading indicator
+      loadingMsg.delete().catch(noop);
+    }
 
     const successfulBanCount = userIds.length - failedBans.length;
     if (successfulBanCount === 0) {

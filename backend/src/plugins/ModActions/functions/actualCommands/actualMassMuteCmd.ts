@@ -1,9 +1,8 @@
-import { ChatInputCommandInteraction, GuildMember, Message, Snowflake } from "discord.js";
+import { Attachment, ChatInputCommandInteraction, GuildMember, Message, Snowflake } from "discord.js";
 import { GuildPluginData } from "knub";
-import { waitForReply } from "knub/helpers";
 import { LogType } from "../../../../data/LogType";
 import { logger } from "../../../../logger";
-import { canActOn, getContextChannel, sendContextResponse } from "../../../../pluginUtils";
+import { canActOn, isContextInteraction, sendContextResponse } from "../../../../pluginUtils";
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { LogsPlugin } from "../../../Logs/LogsPlugin";
 import { MutesPlugin } from "../../../Mutes/MutesPlugin";
@@ -17,6 +16,8 @@ export async function actualMassMuteCmd(
   context: Message | ChatInputCommandInteraction,
   userIds: string[],
   author: GuildMember,
+  reason: string,
+  attachments: Attachment[],
 ) {
   // Limit to 100 users at once (arbitrary?)
   if (userIds.length > 100) {
@@ -24,29 +25,13 @@ export async function actualMassMuteCmd(
     return;
   }
 
-  // Ask for mute reason
-  sendContextResponse(context, "Mute reason? `cancel` to cancel");
-  const muteReasonReceived = await waitForReply(pluginData.client, await getContextChannel(context), author.id);
-  if (
-    !muteReasonReceived ||
-    !muteReasonReceived.content ||
-    muteReasonReceived.content.toLowerCase().trim() === "cancel"
-  ) {
-    pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Cancelled");
+  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, reason)) {
     return;
   }
 
-  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, muteReasonReceived.content)) {
-    return;
-  }
-
-  const parsedReason = parseReason(pluginData.config.get(), muteReasonReceived.content);
-  const muteReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, [
-    ...muteReasonReceived.attachments.values(),
-  ]);
-  const muteReasonWithAttachments = formatReasonWithAttachments(parsedReason, [
-    ...muteReasonReceived.attachments.values(),
-  ]);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const muteReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, attachments);
+  const muteReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   // Verify we can act upon all users
   for (const userId of userIds) {
@@ -67,7 +52,7 @@ export async function actualMassMuteCmd(
   });
 
   // Show loading indicator
-  const loadingMsg = await sendContextResponse(context, "Muting...");
+  const loadingMsg = await sendContextResponse(context, { content: "Muting...", ephemeral: true });
 
   // Mute everyone and count fails
   const modId = author.id;
@@ -86,8 +71,10 @@ export async function actualMassMuteCmd(
     }
   }
 
-  // Clear loading indicator
-  loadingMsg.delete();
+  if (!isContextInteraction(context)) {
+    // Clear loading indicator
+    loadingMsg.delete();
+  }
 
   const successfulMuteCount = userIds.length - failedMutes.length;
   if (successfulMuteCount === 0) {

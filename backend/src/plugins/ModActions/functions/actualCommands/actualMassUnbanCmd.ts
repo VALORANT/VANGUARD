@@ -1,10 +1,9 @@
-import { ChatInputCommandInteraction, GuildMember, Message, Snowflake } from "discord.js";
+import { Attachment, ChatInputCommandInteraction, GuildMember, Message, Snowflake } from "discord.js";
 import { GuildPluginData } from "knub";
-import { waitForReply } from "knub/helpers";
 import { CaseTypes } from "../../../../data/CaseTypes";
 import { LogType } from "../../../../data/LogType";
-import { getContextChannel, sendContextResponse } from "../../../../pluginUtils";
-import { MINUTES } from "../../../../utils";
+import { isContextInteraction, sendContextResponse } from "../../../../pluginUtils";
+import { MINUTES, noop } from "../../../../utils";
 import { CasesPlugin } from "../../../Cases/CasesPlugin";
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { LogsPlugin } from "../../../Logs/LogsPlugin";
@@ -20,6 +19,8 @@ export async function actualMassUnbanCmd(
   context: Message | ChatInputCommandInteraction,
   userIds: string[],
   author: GuildMember,
+  reason: string,
+  attachments: Attachment[],
 ) {
   // Limit to 100 users at once (arbitrary?)
   if (userIds.length > 100) {
@@ -27,22 +28,12 @@ export async function actualMassUnbanCmd(
     return;
   }
 
-  // Ask for unban reason (cleaner this way instead of trying to cram it into the args)
-  sendContextResponse(context, "Unban reason? `cancel` to cancel");
-  const unbanReasonReply = await waitForReply(pluginData.client, await getContextChannel(context), author.id);
-  if (!unbanReasonReply || !unbanReasonReply.content || unbanReasonReply.content.toLowerCase().trim() === "cancel") {
-    pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Cancelled");
+  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, reason)) {
     return;
   }
 
-  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, unbanReasonReply.content)) {
-    return;
-  }
-
-  const parsedReason = parseReason(pluginData.config.get(), unbanReasonReply.content);
-  const unbanReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, [
-    ...unbanReasonReply.attachments.values(),
-  ]);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const unbanReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, attachments);
 
   // Ignore automatic unban cases and logs for these users
   // We'll create our own cases below and post a single "mass unbanned" log instead
@@ -53,7 +44,7 @@ export async function actualMassUnbanCmd(
   });
 
   // Show a loading indicator since this can take a while
-  const loadingMsg = await sendContextResponse(context, "Unbanning...");
+  const loadingMsg = await sendContextResponse(context, { content: "Unbanning...", ephemeral: true });
 
   // Unban each user and count failed unbans (if any)
   const failedUnbans: Array<{ userId: string; reason: UnbanFailReasons }> = [];
@@ -89,8 +80,10 @@ export async function actualMassUnbanCmd(
     }
   }
 
-  // Clear loading indicator
-  loadingMsg.delete();
+  if (!isContextInteraction(context)) {
+    // Clear loading indicator
+    loadingMsg.delete().catch(noop);
+  }
 
   const successfulUnbanCount = userIds.length - failedUnbans.length;
   if (successfulUnbanCount === 0) {
