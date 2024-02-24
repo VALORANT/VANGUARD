@@ -1,10 +1,9 @@
-import { ChatInputCommandInteraction, GuildMember, Message, Snowflake } from "discord.js";
+import { Attachment, ChatInputCommandInteraction, GuildMember, Message, Snowflake } from "discord.js";
 import { GuildPluginData } from "knub";
-import { waitForReply } from "knub/helpers";
 import { CaseTypes } from "../../../../data/CaseTypes";
 import { LogType } from "../../../../data/LogType";
 import { humanizeDurationShort } from "../../../../humanizeDurationShort";
-import { canActOn, getContextChannel, sendContextResponse } from "../../../../pluginUtils";
+import { canActOn, isContextInteraction, sendContextResponse } from "../../../../pluginUtils";
 import { MINUTES, noop, notifyUser, resolveMember } from "../../../../utils";
 import { CasesPlugin } from "../../../Cases/CasesPlugin";
 import { CommonPlugin } from "../../../Common/CommonPlugin";
@@ -23,6 +22,8 @@ export async function actualMassKickCmd(
   context: Message | ChatInputCommandInteraction,
   userIds: string[],
   author: GuildMember,
+  reason: string,
+  attachments: Attachment[],
 ) {
   // Limit to 100 users at once (arbitrary?)
   if (userIds.length > 100) {
@@ -30,25 +31,13 @@ export async function actualMassKickCmd(
     return;
   }
 
-  // Ask for kick reason (cleaner this way instead of trying to cram it into the args)
-  sendContextResponse(context, "Kick reason? `cancel` to cancel");
-  const kickReasonReply = await waitForReply(pluginData.client, await getContextChannel(context), author.id);
-  if (!kickReasonReply || !kickReasonReply.content || kickReasonReply.content.toLowerCase().trim() === "cancel") {
-    pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Cancelled");
+  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, reason)) {
     return;
   }
 
-  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, kickReasonReply.content)) {
-    return;
-  }
-
-  const parsedReason = parseReason(pluginData.config.get(), kickReasonReply.content);
-  const kickReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, kickReasonReply, [
-    ...kickReasonReply.attachments.values(),
-  ]);
-  const kickReasonWithAttachments = formatReasonWithAttachments(parsedReason, [
-    ...kickReasonReply.attachments.values(),
-  ]);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const kickReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, attachments);
+  const kickReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   // Verify we can act on each of the users specified
   for (const userId of userIds) {
@@ -68,25 +57,38 @@ export async function actualMassKickCmd(
     pluginData.state.masskickQueue.length === 0
       ? "Kicking..."
       : `Masskick queued. Waiting for previous masskick to finish (max wait ${maxWaitTimeFormatted}).`;
-  const loadingMsg = await sendContextResponse(context, initialLoadingText);
+  const loadingMsg = await sendContextResponse(context, { content: initialLoadingText, ephemeral: true });
 
   const waitTimeStart = performance.now();
   const waitingInterval = setInterval(() => {
     const waitTime = humanizeDurationShort(performance.now() - waitTimeStart, { round: true });
-    loadingMsg
-      .edit(`Masskick queued. Still waiting for previous masskick to finish (waited ${waitTime}).`)
-      .catch(() => clearInterval(waitingInterval));
+    const waitMessageContent = `Masskick queued. Still waiting for previous masskick to finish (waited ${waitTime}).`;
+
+    if (isContextInteraction(context)) {
+      context.editReply(waitMessageContent).catch(() => clearInterval(waitingInterval));
+    } else {
+      loadingMsg.edit(waitMessageContent).catch(() => clearInterval(waitingInterval));
+    }
   }, 1 * MINUTES);
 
   pluginData.state.masskickQueue.add(async () => {
     clearInterval(waitingInterval);
 
     if (pluginData.state.unloaded) {
-      void loadingMsg.delete().catch(noop);
+      if (isContextInteraction(context)) {
+        void context.deleteReply().catch(noop);
+      } else {
+        void loadingMsg.delete().catch(noop);
+      }
+
       return;
     }
 
-    void loadingMsg.edit("Kicking...").catch(noop);
+    if (isContextInteraction(context)) {
+      void context.editReply("Kicking...").catch(noop);
+    } else {
+      void loadingMsg.edit("Kicking...").catch(noop);
+    }
 
     // Kick each user and count failed kicks (if any)
     const startTime = performance.now();
@@ -143,15 +145,23 @@ export async function actualMassKickCmd(
 
       // Send a status update every 10 kicks
       if ((i + 1) % 10 === 0) {
-        loadingMsg.edit(`Kicking... ${i + 1}/${userIds.length}`).catch(noop);
+        const newLoadingMessageContent = `Kicking... ${i + 1}/${userIds.length}`;
+
+        if (isContextInteraction(context)) {
+          void context.editReply(newLoadingMessageContent).catch(noop);
+        } else {
+          loadingMsg.edit(newLoadingMessageContent).catch(noop);
+        }
       }
     }
 
     const totalTime = performance.now() - startTime;
     const formattedTimeTaken = humanizeDurationShort(totalTime, { round: true });
 
-    // Clear loading indicator
-    loadingMsg.delete().catch(noop);
+    if (!isContextInteraction(context)) {
+      // Clear loading indicator
+      loadingMsg.delete().catch(noop);
+    }
 
     const successfulKickCount = userIds.length - failedKicks.length;
     if (successfulKickCount === 0) {

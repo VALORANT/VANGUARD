@@ -11,6 +11,11 @@ import { UnbanSlashCmdAutocomplete } from "../commands/unban/UnbanSlashCmd";
 import { UnmuteSlashCmdAutocomplete } from "../commands/unmute/UnmuteSlashCmd";
 import { UpdateSlashCmdAutocomplete } from "../commands/update/UpdateSlashCmd";
 import { WarnSlashCmdAutocomplete } from "../commands/warn/WarnSlashCmd";
+import { MassBanSlashCmdAutocomplete } from "../commands/massban/MassBanSlashCmd";
+import { MassKickSlashCmdAutocomplete } from "../commands/masskick/MassKickSlashCmd";
+import { MassMuteSlashCmdAutocomplete } from "../commands/massmute/MassMuteSlashCmd";
+import { MassUnbanSlashCmdAutocomplete } from "../commands/massunban/MassUnbanSlashCmd";
+import { MassWarnSlashCmdAutocomplete } from "../commands/masswarn/MassWarnSlashCmd";
 
 export const AutocompleteEvt = modActionsEvt({
   event: "interactionCreate",
@@ -48,6 +53,26 @@ export const AutocompleteEvt = modActionsEvt({
 
       case "kick":
         KickSlashCmdAutocomplete({ pluginData, interaction });
+        break;
+
+      case "massban":
+        MassBanSlashCmdAutocomplete({ pluginData, interaction });
+        break;
+
+      case "masskick":
+        MassKickSlashCmdAutocomplete({ pluginData, interaction });
+        break;
+
+      case "massmute":
+        MassMuteSlashCmdAutocomplete({ pluginData, interaction });
+        break;
+
+      case "massunban":
+        MassUnbanSlashCmdAutocomplete({ pluginData, interaction });
+        break;
+
+      case "masswarn":
+        MassWarnSlashCmdAutocomplete({ pluginData, interaction });
         break;
 
       case "mute":

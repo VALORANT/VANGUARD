@@ -1,8 +1,7 @@
-import { ChatInputCommandInteraction, GuildMember, Message, Snowflake, User } from "discord.js";
+import { Attachment, ChatInputCommandInteraction, GuildMember, Message, Snowflake, User } from "discord.js";
 import { GuildPluginData } from "knub";
-import { waitForReply } from "knub/helpers";
 import { humanizeDurationShort } from "../../../../humanizeDurationShort";
-import { canActOn, getContextChannel, sendContextResponse } from "../../../../pluginUtils";
+import { canActOn, isContextInteraction, sendContextResponse } from "../../../../pluginUtils";
 import { MINUTES, noop, resolveMember, resolveUser } from "../../../../utils";
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { LogsPlugin } from "../../../Logs/LogsPlugin";
@@ -18,6 +17,8 @@ export async function actualMassWarnCmd(
   context: Message | ChatInputCommandInteraction,
   userIds: string[],
   author: GuildMember,
+  reason: string,
+  attachments: Attachment[],
 ) {
   // Limit to 100 users at once (arbitrary?)
   if (userIds.length > 100) {
@@ -25,25 +26,13 @@ export async function actualMassWarnCmd(
     return;
   }
 
-  // Ask for warn reason (cleaner this way instead of trying to cram it into the args)
-  sendContextResponse(context, "Warn reason? `cancel` to cancel");
-  const warnReasonReply = await waitForReply(pluginData.client, await getContextChannel(context), author.id);
-  if (!warnReasonReply || !warnReasonReply.content || warnReasonReply.content.toLowerCase().trim() === "cancel") {
-    pluginData.getPlugin(CommonPlugin).sendErrorMessage(context, "Cancelled");
+  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, reason)) {
     return;
   }
 
-  if (await handleAttachmentLinkDetectionAndGetRestriction(pluginData, context, warnReasonReply.content)) {
-    return;
-  }
-
-  const parsedReason = parseReason(pluginData.config.get(), warnReasonReply.content);
-  const warnReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, warnReasonReply, [
-    ...warnReasonReply.attachments.values(),
-  ]);
-  const warnReasonWithAttachments = formatReasonWithAttachments(parsedReason, [
-    ...warnReasonReply.attachments.values(),
-  ]);
+  const parsedReason = parseReason(pluginData.config.get(), reason);
+  const warnReason = await formatReasonWithMessageLinkForAttachments(pluginData, parsedReason, context, attachments);
+  const warnReasonWithAttachments = formatReasonWithAttachments(parsedReason, attachments);
 
   // Verify we can act on each of the users specified
   for (const userId of userIds) {
@@ -63,25 +52,38 @@ export async function actualMassWarnCmd(
     pluginData.state.masswarnQueue.length === 0
       ? "Warning..."
       : `Masswarn queued. Waiting for previous masswarn to finish (max wait ${maxWaitTimeFormatted}).`;
-  const loadingMsg = await sendContextResponse(context, initialLoadingText);
+  const loadingMsg = await sendContextResponse(context, { content: initialLoadingText, ephemeral: true });
 
   const waitTimeStart = performance.now();
   const waitingInterval = setInterval(() => {
     const waitTime = humanizeDurationShort(performance.now() - waitTimeStart, { round: true });
-    loadingMsg
-      .edit(`Masswarn queued. Still waiting for previous masswarn to finish (waited ${waitTime}).`)
-      .catch(() => clearInterval(waitingInterval));
+    const waitMessageContent = `Masswarn queued. Still waiting for previous masswarn to finish (waited ${waitTime}).`;
+
+    if (isContextInteraction(context)) {
+      context.editReply(waitMessageContent).catch(() => clearInterval(waitingInterval));
+    } else {
+      loadingMsg.edit(waitMessageContent).catch(() => clearInterval(waitingInterval));
+    }
   }, 1 * MINUTES);
 
   pluginData.state.masswarnQueue.add(async () => {
     clearInterval(waitingInterval);
 
     if (pluginData.state.unloaded) {
-      void loadingMsg.delete().catch(noop);
+      if (isContextInteraction(context)) {
+        void context.deleteReply().catch(noop);
+      } else {
+        void loadingMsg.delete().catch(noop);
+      }
+
       return;
     }
 
-    void loadingMsg.edit("Warning...").catch(noop);
+    if (isContextInteraction(context)) {
+      void context.editReply("Banning...").catch(noop);
+    } else {
+      void loadingMsg.edit("Banning...").catch(noop);
+    }
 
     // Warn each user and count failed warns (if any)
     const startTime = performance.now();
@@ -89,7 +91,13 @@ export async function actualMassWarnCmd(
     for (const [i, userId] of userIds.entries()) {
       // Send a status update every 10 warns
       if ((i + 1) % 10 === 0) {
-        loadingMsg.edit(`Warning... ${i + 1}/${userIds.length}`).catch(noop);
+        const newLoadingMessageContent = `Warning... ${i + 1}/${userIds.length}`;
+
+        if (isContextInteraction(context)) {
+          void context.editReply(newLoadingMessageContent).catch(noop);
+        } else {
+          loadingMsg.edit(newLoadingMessageContent).catch(noop);
+        }
       }
 
       if (pluginData.state.unloaded) {
@@ -125,8 +133,10 @@ export async function actualMassWarnCmd(
     const totalTime = performance.now() - startTime;
     const formattedTimeTaken = humanizeDurationShort(totalTime, { round: true });
 
-    // Clear loading indicator
-    loadingMsg.delete().catch(noop);
+    if (!isContextInteraction(context)) {
+      // Clear loading indicator
+      loadingMsg.delete().catch(noop);
+    }
 
     const successfulWarnCount = userIds.length - failedWarns.length;
     if (successfulWarnCount === 0) {

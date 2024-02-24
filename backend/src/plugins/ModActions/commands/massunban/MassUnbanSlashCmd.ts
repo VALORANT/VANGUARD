@@ -3,14 +3,31 @@ import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../.
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { actualMassUnbanCmd } from "../../functions/actualCommands/actualMassUnbanCmd";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
+import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
 const opts = [
-  slashOptions.string({ name: "reason", description: "The reason", required: false }),
+  {
+    ...slashOptions.string({ name: "reason", description: "The reason", required: false }),
+    getExtraAPIProps: () => ({
+      autocomplete: true,
+    }),
+  },
   ...generateAttachmentSlashOptions(NUMBER_ATTACHMENTS_CASE_CREATION, {
     name: "attachment",
     description: "An attachment to add to the reason",
   }),
 ];
+
+export function MassUnbanSlashCmdAutocomplete({ pluginData, interaction }) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name !== "reason") {
+    interaction.respond([]);
+    return;
+  }
+
+  slashCmdReasonAliasAutocomplete({ pluginData, interaction });
+}
 
 export const MassUnbanSlashCmd = {
   name: "massunban",
