@@ -84,6 +84,7 @@ import {
   modActionsSlashGroup,
   zModActionsConfig,
 } from "./types";
+import { AutocompleteEvt } from "./events/AutocompleteEvt";
 
 const defaultOptions = {
   config: {
@@ -173,7 +174,13 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
   configParser: (input) => zModActionsConfig.parse(input),
   defaultOptions,
 
-  events: [CreateBanCaseOnManualBanEvt, CreateUnbanCaseOnManualUnbanEvt, PostAlertOnMemberJoinEvt, AuditLogEvents],
+  events: [
+    CreateBanCaseOnManualBanEvt,
+    CreateUnbanCaseOnManualUnbanEvt,
+    PostAlertOnMemberJoinEvt,
+    AuditLogEvents,
+    AutocompleteEvt,
+  ],
 
   slashCommands: [
     modActionsSlashGroup({

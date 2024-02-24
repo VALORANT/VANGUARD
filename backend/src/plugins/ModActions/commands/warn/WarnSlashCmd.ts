@@ -8,9 +8,15 @@ import { actualWarnCmd } from "../../functions/actualCommands/actualWarnCmd";
 import { isBanned } from "../../functions/isBanned";
 import { readContactMethodsFromArgs } from "../../functions/readContactMethodsFromArgs";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
+import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
 const opts = [
-  slashOptions.string({ name: "reason", description: "The reason", required: false }),
+  {
+    ...slashOptions.string({ name: "reason", description: "The reason", required: false }),
+    getExtraAPIProps: () => ({
+      autocomplete: true,
+    }),
+  },
   slashOptions.user({ name: "mod", description: "The moderator to warn as", required: false }),
   slashOptions.string({
     name: "notify",
@@ -32,6 +38,17 @@ const opts = [
     description: "An attachment to add to the reason of the warn",
   }),
 ];
+
+export function WarnSlashCmdAutocomplete({ pluginData, interaction }) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name !== "reason") {
+    interaction.respond([]);
+    return;
+  }
+
+  slashCmdReasonAliasAutocomplete({ pluginData, interaction });
+}
 
 export const WarnSlashCmd = {
   name: "warn",

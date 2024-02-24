@@ -3,14 +3,31 @@ import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../.
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { actualNoteCmd } from "../../functions/actualCommands/actualNoteCmd";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
+import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
 const opts = [
-  slashOptions.string({ name: "note", description: "The note to add to the user", required: false }),
+  {
+    ...slashOptions.string({ name: "note", description: "The note to add to the user", required: false }),
+    getExtraAPIProps: () => ({
+      autocomplete: true,
+    }),
+  },
   ...generateAttachmentSlashOptions(NUMBER_ATTACHMENTS_CASE_CREATION, {
     name: "attachment",
     description: "An attachment to add to the note",
   }),
 ];
+
+export function NoteSlashCmdAutocomplete({ pluginData, interaction }) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name !== "note") {
+    interaction.respond([]);
+    return;
+  }
+
+  slashCmdReasonAliasAutocomplete({ pluginData, interaction });
+}
 
 export const NoteSlashCmd = {
   name: "note",

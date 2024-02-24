@@ -5,16 +5,33 @@ import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../.
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { actualUnmuteCmd } from "../../functions/actualCommands/actualUnmuteCmd";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
+import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
 const opts = [
   slashOptions.string({ name: "time", description: "The duration of the unmute", required: false }),
-  slashOptions.string({ name: "reason", description: "The reason", required: false }),
+  {
+    ...slashOptions.string({ name: "reason", description: "The reason", required: false }),
+    getExtraAPIProps: () => ({
+      autocomplete: true,
+    }),
+  },
   slashOptions.user({ name: "mod", description: "The moderator to unmute as", required: false }),
   ...generateAttachmentSlashOptions(NUMBER_ATTACHMENTS_CASE_CREATION, {
     name: "attachment",
     description: "An attachment to add to the reason of the unmute",
   }),
 ];
+
+export function ForceUnmuteSlashCmdAutocomplete({ pluginData, interaction }) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name !== "reason") {
+    interaction.respond([]);
+    return;
+  }
+
+  slashCmdReasonAliasAutocomplete({ pluginData, interaction });
+}
 
 export const ForceUnmuteSlashCmd = {
   name: "forceunmute",

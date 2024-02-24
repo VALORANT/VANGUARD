@@ -7,10 +7,16 @@ import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { actualMuteCmd } from "../../functions/actualCommands/actualMuteCmd";
 import { readContactMethodsFromArgs } from "../../functions/readContactMethodsFromArgs";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
+import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
 const opts = [
   slashOptions.string({ name: "time", description: "The duration of the mute", required: false }),
-  slashOptions.string({ name: "reason", description: "The reason", required: false }),
+  {
+    ...slashOptions.string({ name: "reason", description: "The reason", required: false }),
+    getExtraAPIProps: () => ({
+      autocomplete: true,
+    }),
+  },
   slashOptions.user({ name: "mod", description: "The moderator to mute as", required: false }),
   slashOptions.string({
     name: "notify",
@@ -32,6 +38,17 @@ const opts = [
     description: "An attachment to add to the reason of the mute",
   }),
 ];
+
+export function ForceMuteSlashCmdAutocomplete({ pluginData, interaction }) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name !== "reason") {
+    interaction.respond([]);
+    return;
+  }
+
+  slashCmdReasonAliasAutocomplete({ pluginData, interaction });
+}
 
 export const ForceMuteSlashCmd = {
   name: "forcemute",

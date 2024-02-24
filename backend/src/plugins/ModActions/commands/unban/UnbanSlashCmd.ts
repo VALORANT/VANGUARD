@@ -4,15 +4,32 @@ import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../.
 import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { actualUnbanCmd } from "../../functions/actualCommands/actualUnbanCmd";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
+import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
 const opts = [
-  slashOptions.string({ name: "reason", description: "The reason", required: false }),
+  {
+    ...slashOptions.string({ name: "reason", description: "The reason", required: false }),
+    getExtraAPIProps: () => ({
+      autocomplete: true,
+    }),
+  },
   slashOptions.user({ name: "mod", description: "The moderator to unban as", required: false }),
   ...generateAttachmentSlashOptions(NUMBER_ATTACHMENTS_CASE_CREATION, {
     name: "attachment",
     description: "An attachment to add to the reason of the unban",
   }),
 ];
+
+export function UnbanSlashCmdAutocomplete({ pluginData, interaction }) {
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name !== "reason") {
+    interaction.respond([]);
+    return;
+  }
+
+  slashCmdReasonAliasAutocomplete({ pluginData, interaction });
+}
 
 export const UnbanSlashCmd = {
   name: "unban",
