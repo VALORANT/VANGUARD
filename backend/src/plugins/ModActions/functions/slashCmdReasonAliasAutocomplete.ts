@@ -22,7 +22,7 @@ export function slashCmdReasonAliasAutocomplete({ pluginData, interaction }) {
   }
 
   if (valueSoFar.length < 1) {
-    interaction.respond(Object.keys(aliases).map(aliasKeyToAutocomplete));
+    interaction.respond(Object.keys(aliases).map(aliasKeyToAutocomplete).slice(0, 25));
     return;
   }
 
@@ -31,6 +31,7 @@ export function slashCmdReasonAliasAutocomplete({ pluginData, interaction }) {
       .filter((alias) => {
         return alias.toLowerCase().includes(valueSoFar) || aliases[alias].toLowerCase().includes(valueSoFar);
       })
-      .map(aliasKeyToAutocomplete),
+      .map(aliasKeyToAutocomplete)
+      .slice(0, 25),
   );
 }
