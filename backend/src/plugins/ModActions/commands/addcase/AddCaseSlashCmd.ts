@@ -51,6 +51,7 @@ export const AddCaseSlashCmd = {
   ],
 
   async run({ interaction, options, pluginData }) {
+    await interaction.deferReply({ ephemeral: true });
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     // The moderator who did the action is the message author or, if used, the specified -mod
