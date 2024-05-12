@@ -87,3 +87,9 @@ npm-audit.txt
 
 config-errors.txt
 /config-schema.json
+
+*.tsbuildinfo
+
+# Legacy data folders
+/docker/development/data
+/docker/production/data

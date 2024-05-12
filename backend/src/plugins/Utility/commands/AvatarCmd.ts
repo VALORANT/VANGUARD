@@ -1,7 +1,6 @@
 import { AttachmentBuilder } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { UnknownUser, renderUsername } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { utilityCmd } from "../types";
 
 export const AvatarCmd = utilityCmd({
@@ -17,7 +16,7 @@ export const AvatarCmd = utilityCmd({
     const user = args.user ?? msg.member ?? msg.author;
 
     if (user instanceof UnknownUser) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Invalid user ID");
+      pluginData.state.common.sendErrorMessage(msg, "Invalid user ID");
 
       return;
     }

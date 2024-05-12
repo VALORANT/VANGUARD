@@ -5,15 +5,15 @@ import { env } from "../env";
 import { simpleDiscordAPIRequest } from "./auth";
 import { notFound } from "./responses";
 
-export function initArchives(app: express.Express) {
+export function initArchives(router: express.Router) {
   const archives = new GuildArchives(null);
 
   // Legacy redirect
-  app.get("/spam-logs/:id", (req: Request, res: Response) => {
+  router.get("/spam-logs/:id", (req: Request, res: Response) => {
     res.redirect("/archives/" + req.params.id);
   });
 
-  app.get("/archives/:id.json", async (req: Request, res: Response) => {
+  router.get("/archives/:id.json", async (req: Request, res: Response) => {
     const archive = await archives.find(req.params.id);
     if (!archive) return notFound(res);
 
@@ -51,7 +51,7 @@ export function initArchives(app: express.Express) {
     res.json(archive);
   });
 
-  app.get("/archives/:id", async (req: Request, res: Response) => {
+  router.get("/archives/:id", async (req: Request, res: Response) => {
     const archive = await archives.find(req.params.id);
     if (!archive) return notFound(res);
 

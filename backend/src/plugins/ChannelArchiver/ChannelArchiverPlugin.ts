@@ -1,12 +1,12 @@
+import { guildPlugin } from "knub";
 import z from "zod";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { TimeAndDatePlugin } from "../TimeAndDate/TimeAndDatePlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { ArchiveChannelCmd } from "./commands/ArchiveChannelCmd";
 import { ChannelArchiverPluginType } from "./types";
 
-export const ChannelArchiverPlugin = zeppelinGuildPlugin<ChannelArchiverPluginType>()({
+export const ChannelArchiverPlugin = guildPlugin<ChannelArchiverPluginType>()({
   name: "channel_archiver",
-  showInDocs: false,
 
   dependencies: () => [TimeAndDatePlugin],
   configParser: (input) => z.strictObject({}).parse(input),
@@ -15,4 +15,8 @@ export const ChannelArchiverPlugin = zeppelinGuildPlugin<ChannelArchiverPluginTy
   messageCommands: [
       ArchiveChannelCmd,
   ],
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
+  },
 });

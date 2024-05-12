@@ -1,14 +1,14 @@
-import { ChannelType } from "discord.js";
+import { ChannelType, GuildMember } from "discord.js";
 import { slashOptions } from "knub";
 import { canActOn, hasPermission } from "../../../../pluginUtils";
 import { UserNotificationMethod, resolveMember } from "../../../../utils";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualWarnCmd } from "../../functions/actualCommands/actualWarnCmd";
 import { isBanned } from "../../functions/isBanned";
 import { readContactMethodsFromArgs } from "../../functions/readContactMethodsFromArgs";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { actualWarnCmd } from "./actualWarnCmd";
 
 const opts = [
   {
@@ -50,7 +50,7 @@ export function WarnSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const WarnSlashCmd = {
+export const WarnSlashCmd = modActionsSlashCmd({
   name: "warn",
   configPermission: "can_warn",
   description: "Send a warning to the specified user",
@@ -63,9 +63,13 @@ export const WarnSlashCmd = {
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     if ((!options.reason || options.reason.trim() === "") && attachments.length < 1) {
-      await pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
+      await pluginData.state.common.sendErrorMessage(
+        interaction,
+        "Text or attachment required",
+        undefined,
+        undefined,
+        true,
+      );
 
       return;
     }
@@ -75,19 +79,20 @@ export const WarnSlashCmd = {
     if (!memberToWarn) {
       const _isBanned = await isBanned(pluginData, options.user.id);
       if (_isBanned) {
-        await pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, `User is banned`);
+        await pluginData.state.common.sendErrorMessage(interaction, `User is banned`);
       } else {
-        await pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, `User not found on the server`);
+        await pluginData.state.common.sendErrorMessage(interaction, `User not found on the server`);
       }
     }
 
+    let mod = interaction.member as GuildMember;
+
     // Make sure we're allowed to warn this member
-    if (memberToWarn && !canActOn(pluginData, interaction.member, memberToWarn)) {
-      await pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, "Cannot warn: insufficient permissions");
+    if (memberToWarn && !canActOn(pluginData, mod, memberToWarn)) {
+      await pluginData.state.common.sendErrorMessage(interaction, "Cannot warn: insufficient permissions");
       return;
     }
 
-    let mod = interaction.member;
     const canActAsOther = await hasPermission(pluginData, "can_act_as_other", {
       channel: interaction.channel,
       member: interaction.member,
@@ -95,20 +100,21 @@ export const WarnSlashCmd = {
 
     if (options.mod) {
       if (!canActAsOther) {
-        await pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(interaction, "You don't have permission to act as another moderator");
+        await pluginData.state.common.sendErrorMessage(
+          interaction,
+          "You don't have permission to act as another moderator",
+        );
         return;
       }
 
-      mod = options.mod;
+      mod = (await resolveMember(pluginData.client, pluginData.guild, options.mod.id))!;
     }
 
     let contactMethods: UserNotificationMethod[] | undefined;
     try {
       contactMethods = readContactMethodsFromArgs(options) ?? undefined;
     } catch (e) {
-      await pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, e.message);
+      await pluginData.state.common.sendErrorMessage(interaction, e.message);
       return;
     }
 
@@ -124,4 +130,4 @@ export const WarnSlashCmd = {
       contactMethods,
     );
   },
-};
+});

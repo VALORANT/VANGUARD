@@ -1,6 +1,5 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { sorter } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { postCmd } from "../types";
 import { postMessage } from "../util/postMessage";
 
@@ -17,7 +16,7 @@ export const ScheduledPostsShowCmd = postCmd({
     scheduledPosts.sort(sorter("post_at"));
     const post = scheduledPosts[args.num - 1];
     if (!post) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Scheduled post not found");
+      void pluginData.state.common.sendErrorMessage(msg, "Scheduled post not found");
       return;
     }
 

@@ -3,7 +3,6 @@ import moment from "moment-timezone";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { isOwner } from "../../../pluginUtils";
 import { SECONDS, confirm, noop, renderUsername } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { TimeAndDatePlugin } from "../../TimeAndDate/TimeAndDatePlugin";
 import { rehostAttachment } from "../rehostAttachment";
 import { channelArchiverCmd } from "../types";
@@ -38,7 +37,7 @@ export const ArchiveChannelCmd = channelArchiverCmd({
           "No `-attachment-channel` specified. Continue? Attachments will not be available in the log if their message is deleted.",
       });
       if (!confirmed) {
-        pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Canceled");
+        void pluginData.state.common.sendErrorMessage(msg, "Canceled");
         return;
       }
     }

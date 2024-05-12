@@ -1,7 +1,6 @@
 import { Role, Snowflake } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { memberRolesLock } from "../../../utils/lockNameHelpers";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { selfGrantableRolesCmd } from "../types";
 import { findMatchingRoles } from "../util/findMatchingRoles";
 import { getApplyingEntries } from "../util/getApplyingEntries";
@@ -39,11 +38,13 @@ export const RoleAddCmd = selfGrantableRolesCmd({
       }, new Map());
 
     if (!rolesToAdd.size) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(msg, `<@!${msg.author.id}> Unknown ${args.roleNames.length === 1 ? "role" : "roles"}`, {
+      void pluginData.state.common.sendErrorMessage(
+        msg,
+        `<@!${msg.author.id}> Unknown ${args.roleNames.length === 1 ? "role" : "roles"}`,
+        {
           users: [msg.author.id],
-        });
+        },
+      );
       lock.unlock();
       return;
     }
@@ -83,11 +84,13 @@ export const RoleAddCmd = selfGrantableRolesCmd({
         roles: Array.from(newRoleIds) as Snowflake[],
       });
     } catch {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(msg, `<@!${msg.author.id}> Got an error while trying to grant you the roles`, {
+      void pluginData.state.common.sendErrorMessage(
+        msg,
+        `<@!${msg.author.id}> Got an error while trying to grant you the roles`,
+        {
           users: [msg.author.id],
-        });
+        },
+      );
       return;
     }
 
@@ -118,7 +121,7 @@ export const RoleAddCmd = selfGrantableRolesCmd({
       messageParts.push("couldn't recognize some of the roles");
     }
 
-    pluginData.getPlugin(CommonPlugin).sendSuccessMessage(msg, `<@!${msg.author.id}> ${messageParts.join("; ")}`, {
+    void pluginData.state.common.sendSuccessMessage(msg, `<@!${msg.author.id}> ${messageParts.join("; ")}`, {
       users: [msg.author.id],
     });
 

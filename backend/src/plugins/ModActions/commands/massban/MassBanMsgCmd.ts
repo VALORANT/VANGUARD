@@ -1,9 +1,8 @@
 import { waitForReply } from "knub/helpers";
 import { commandTypeHelpers as ct } from "../../../../commandTypes";
 import { getContextChannel, sendContextResponse } from "../../../../pluginUtils";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualMassBanCmd } from "../../functions/actualCommands/actualMassBanCmd";
 import { modActionsMsgCmd } from "../../types";
+import { actualMassBanCmd } from "./actualMassBanCmd";
 
 export const MassBanMsgCmd = modActionsMsgCmd({
   trigger: "massban",
@@ -22,7 +21,7 @@ export const MassBanMsgCmd = modActionsMsgCmd({
     const banReasonReply = await waitForReply(pluginData.client, await getContextChannel(msg), msg.author.id);
 
     if (!banReasonReply || !banReasonReply.content || banReasonReply.content.toLowerCase().trim() === "cancel") {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Cancelled");
+      pluginData.state.common.sendErrorMessage(msg, "Cancelled");
       return;
     }
 

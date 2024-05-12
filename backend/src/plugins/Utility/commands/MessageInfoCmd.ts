@@ -1,6 +1,5 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { canReadChannel } from "../../../utils/canReadChannel";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { getMessageInfoEmbed } from "../functions/getMessageInfoEmbed";
 import { utilityCmd } from "../types";
 
@@ -16,13 +15,13 @@ export const MessageInfoCmd = utilityCmd({
 
   async run({ message, args, pluginData }) {
     if (!canReadChannel(args.message.channel, message.member)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(message, "Unknown message");
+      void pluginData.state.common.sendErrorMessage(message, "Unknown message");
       return;
     }
 
     const embed = await getMessageInfoEmbed(pluginData, args.message.channel.id, args.message.messageId);
     if (!embed) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(message, "Unknown message");
+      void pluginData.state.common.sendErrorMessage(message, "Unknown message");
       return;
     }
 

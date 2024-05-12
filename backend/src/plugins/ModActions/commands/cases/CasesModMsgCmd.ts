@@ -1,6 +1,6 @@
 import { commandTypeHelpers as ct } from "../../../../commandTypes";
-import { actualCasesCmd } from "../../functions/actualCommands/actualCasesCmd";
 import { modActionsMsgCmd } from "../../types";
+import { actualCasesCmd } from "./actualCasesCmd";
 
 const opts = {
   mod: ct.userId({ option: true }),

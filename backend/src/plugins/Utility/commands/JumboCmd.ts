@@ -4,7 +4,6 @@ import fs from "fs";
 import twemoji from "twemoji";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { downloadFile, isEmoji, SECONDS } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { utilityCmd } from "../types";
 
 const fsp = fs.promises;
@@ -51,7 +50,7 @@ export const JumboCmd = utilityCmd({
     let file: AttachmentBuilder | undefined;
 
     if (!isEmoji(args.emoji)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Invalid emoji");
+      void pluginData.state.common.sendErrorMessage(msg, "Invalid emoji");
       return;
     }
 
@@ -87,7 +86,7 @@ export const JumboCmd = utilityCmd({
         }
       }
       if (!image) {
-        pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Error occurred while jumboing default emoji");
+        void pluginData.state.common.sendErrorMessage(msg, "Error occurred while jumboing default emoji");
         return;
       }
 

@@ -1,18 +1,19 @@
-import { GuildMember, Message, Snowflake, User } from "discord.js";
+import { Message } from "discord.js";
 import { EventEmitter } from "events";
+import { guildPlugin } from "knub";
 import { Queue } from "../../Queue";
 import { GuildCases } from "../../data/GuildCases";
 import { onGuildEvent } from "../../data/GuildEvents";
 import { GuildLogs } from "../../data/GuildLogs";
 import { GuildMutes } from "../../data/GuildMutes";
 import { GuildTempbans } from "../../data/GuildTempbans";
-import { mapToPublicFn } from "../../pluginUtils";
-import { MINUTES, trimPluginDescription, UnknownUser } from "../../utils";
+import { makePublicFn, mapToPublicFn } from "../../pluginUtils";
+import { MINUTES } from "../../utils";
 import { CasesPlugin } from "../Cases/CasesPlugin";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { LogsPlugin } from "../Logs/LogsPlugin";
 import { MutesPlugin } from "../Mutes/MutesPlugin";
 import { TimeAndDatePlugin } from "../TimeAndDate/TimeAndDatePlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { AddCaseMsgCmd } from "./commands/addcase/AddCaseMsgCmd";
 import { AddCaseSlashCmd } from "./commands/addcase/AddCaseSlashCmd";
 import { BanMsgCmd } from "./commands/ban/BanMsgCmd";
@@ -75,15 +76,7 @@ import { offModActionsEvent } from "./functions/offModActionsEvent";
 import { onModActionsEvent } from "./functions/onModActionsEvent";
 import { updateCase } from "./functions/updateCase";
 import { warnMember } from "./functions/warnMember";
-import {
-  AttachmentLinkReactionType,
-  BanOptions,
-  KickOptions,
-  ModActionsPluginType,
-  WarnOptions,
-  modActionsSlashGroup,
-  zModActionsConfig,
-} from "./types";
+import { AttachmentLinkReactionType, ModActionsPluginType, modActionsSlashGroup, zModActionsConfig } from "./types";
 import { AutocompleteEvt } from "./events/AutocompleteEvt";
 
 const defaultOptions = {
@@ -107,7 +100,6 @@ const defaultOptions = {
       "The user already has **{priorWarnings}** warnings!\n Please check their prior cases and assess whether or not to warn anyways.\n Proceed with the warning?",
     ban_delete_message_days: 1,
     attachment_link_reaction: "warn" as AttachmentLinkReactionType,
-    attachment_storing_channel: null,
 
     can_note: false,
     can_warn: false,
@@ -159,16 +151,8 @@ const defaultOptions = {
   ],
 };
 
-export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
+export const ModActionsPlugin = guildPlugin<ModActionsPluginType>()({
   name: "mod_actions",
-  showInDocs: true,
-  info: {
-    prettyName: "Mod actions",
-    description: trimPluginDescription(`
-      This plugin contains the 'typical' mod actions such as warning, muting, kicking, banning, etc.
-    `),
-    configSchema: zModActionsConfig,
-  },
 
   dependencies: () => [TimeAndDatePlugin, CasesPlugin, MutesPlugin, LogsPlugin],
   configParser: (input) => zModActionsConfig.parse(input),
@@ -188,28 +172,28 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
       description: "Moderation actions",
       defaultMemberPermissions: "0",
       subcommands: [
-        { type: "slash", ...AddCaseSlashCmd },
-        { type: "slash", ...BanSlashCmd },
-        { type: "slash", ...CaseSlashCmd },
-        { type: "slash", ...CasesSlashCmd },
-        { type: "slash", ...DeleteCaseSlashCmd },
-        { type: "slash", ...ForceBanSlashCmd },
-        { type: "slash", ...ForceMuteSlashCmd },
-        { type: "slash", ...ForceUnmuteSlashCmd },
-        { type: "slash", ...HideCaseSlashCmd },
-        { type: "slash", ...KickSlashCmd },
-        { type: "slash", ...MassBanSlashCmd },
-        { type: "slash", ...MassKickSlashCmd },
-        { type: "slash", ...MassMuteSlashSlashCmd },
-        { type: "slash", ...MassUnbanSlashCmd },
-        { type: "slash", ...MassWarnSlashCmd },
-        { type: "slash", ...MuteSlashCmd },
-        { type: "slash", ...NoteSlashCmd },
-        { type: "slash", ...UnbanSlashCmd },
-        { type: "slash", ...UnhideCaseSlashCmd },
-        { type: "slash", ...UnmuteSlashCmd },
-        { type: "slash", ...UpdateSlashCmd },
-        { type: "slash", ...WarnSlashCmd },
+        AddCaseSlashCmd,
+        BanSlashCmd,
+        CaseSlashCmd,
+        CasesSlashCmd,
+        DeleteCaseSlashCmd,
+        ForceBanSlashCmd,
+        ForceMuteSlashCmd,
+        ForceUnmuteSlashCmd,
+        HideCaseSlashCmd,
+        KickSlashCmd,
+        MassBanSlashCmd,
+        MassKickSlashCmd,
+        MassMuteSlashSlashCmd,
+        MassUnbanSlashCmd,
+        MassWarnSlashCmd,
+        MuteSlashCmd,
+        NoteSlashCmd,
+        UnbanSlashCmd,
+        UnhideCaseSlashCmd,
+        UnmuteSlashCmd,
+        UpdateSlashCmd,
+        WarnSlashCmd,
       ],
     }),
   ],
@@ -240,72 +224,21 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
     DeleteCaseMsgCmd,
   ],
 
-  public: {
-    warnMember(pluginData) {
-      return (
-        reason: string,
-        reasonWithAttachments: string,
-        user: User | UnknownUser,
-        member?: GuildMember | null,
-        warnOptions?: WarnOptions,
-      ) => {
-        return warnMember(pluginData, reason, reasonWithAttachments, user, member, warnOptions);
-      };
-    },
-
-    kickMember(pluginData) {
-      return (member: GuildMember, reason: string, reasonWithAttachments: string, kickOptions?: KickOptions) => {
-        return kickMember(pluginData, member, reason, reasonWithAttachments, kickOptions);
-      };
-    },
-
-    banUserId(pluginData) {
-      return (
-        userId: string,
-        reason?: string,
-        reasonWithAttachments?: string,
-        banOptions?: BanOptions,
-        banTime?: number,
-      ) => {
-        return banUserId(pluginData, userId, reason, reasonWithAttachments, banOptions, banTime);
-      };
-    },
-
-    updateCase(pluginData) {
-      return (msg: Message, caseNumber: number | null, note: string) => {
-        return updateCase(pluginData, msg, msg.author, caseNumber ?? undefined, note, [...msg.attachments.values()]);
-      };
-    },
-
-    hasNotePermission(pluginData) {
-      return (member: GuildMember, channelId: Snowflake) => {
-        return hasNotePermission(pluginData, member, channelId);
-      };
-    },
-
-    hasWarnPermission(pluginData) {
-      return (member: GuildMember, channelId: Snowflake) => {
-        return hasWarnPermission(pluginData, member, channelId);
-      };
-    },
-
-    hasMutePermission(pluginData) {
-      return (member: GuildMember, channelId: Snowflake) => {
-        return hasMutePermission(pluginData, member, channelId);
-      };
-    },
-
-    hasBanPermission(pluginData) {
-      return (member: GuildMember, channelId: Snowflake) => {
-        return hasBanPermission(pluginData, member, channelId);
-      };
-    },
-
-    on: mapToPublicFn(onModActionsEvent),
-    off: mapToPublicFn(offModActionsEvent),
-    getEventEmitter(pluginData) {
-      return () => pluginData.state.events;
-    },
+  public(pluginData) {
+    return {
+      warnMember: makePublicFn(pluginData, warnMember),
+      kickMember: makePublicFn(pluginData, kickMember),
+      banUserId: makePublicFn(pluginData, banUserId),
+      updateCase: (msg: Message, caseNumber: number | null, note: string) =>
+        updateCase(pluginData, msg, msg.author, caseNumber ?? undefined, note, [...msg.attachments.values()]),
+      hasNotePermission: makePublicFn(pluginData, hasNotePermission),
+      hasWarnPermission: makePublicFn(pluginData, hasWarnPermission),
+      hasMutePermission: makePublicFn(pluginData, hasMutePermission),
+      hasBanPermission: makePublicFn(pluginData, hasBanPermission),
+      on: mapToPublicFn(onModActionsEvent),
+      off: mapToPublicFn(offModActionsEvent),
+      getEventEmitter: () => pluginData.state.events,
+    };
   },
 
   beforeLoad(pluginData) {
@@ -329,6 +262,10 @@ export const ModActionsPlugin = zeppelinGuildPlugin<ModActionsPluginType>()({
     state.masswarnQueue = new Queue(15 * MINUTES);
 
     state.events = new EventEmitter();
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 
   afterLoad(pluginData) {

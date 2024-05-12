@@ -1,4 +1,4 @@
-import { CooldownManager } from "knub";
+import { CooldownManager, guildPlugin } from "knub";
 import { Queue } from "../../Queue";
 import { GuildAntiraidLevels } from "../../data/GuildAntiraidLevels";
 import { GuildArchives } from "../../data/GuildArchives";
@@ -8,6 +8,7 @@ import { discardRegExpRunner, getRegExpRunner } from "../../regExpRunners";
 import { MINUTES, SECONDS } from "../../utils";
 import { registerEventListenersFromMap } from "../../utils/registerEventListenersFromMap";
 import { unregisterEventListenersFromMap } from "../../utils/unregisterEventListenersFromMap";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { CountersPlugin } from "../Counters/CountersPlugin";
 import { InternalPosterPlugin } from "../InternalPoster/InternalPosterPlugin";
 import { LogsPlugin } from "../Logs/LogsPlugin";
@@ -15,7 +16,6 @@ import { ModActionsPlugin } from "../ModActions/ModActionsPlugin";
 import { MutesPlugin } from "../Mutes/MutesPlugin";
 import { PhishermanPlugin } from "../Phisherman/PhishermanPlugin";
 import { RoleManagerPlugin } from "../RoleManager/RoleManagerPlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { AntiraidClearCmd } from "./commands/AntiraidClearCmd";
 import { SetAntiraidCmd } from "./commands/SetAntiraidCmd";
 import { ViewAntiraidCmd } from "./commands/ViewAntiraidCmd";
@@ -32,7 +32,6 @@ import {
 import { clearOldRecentNicknameChanges } from "./functions/clearOldNicknameChanges";
 import { clearOldRecentActions } from "./functions/clearOldRecentActions";
 import { clearOldRecentSpam } from "./functions/clearOldRecentSpam";
-import { pluginInfo } from "./info";
 import { AutomodPluginType, zAutomodConfig } from "./types";
 
 const defaultOptions = {
@@ -58,10 +57,8 @@ const defaultOptions = {
   ],
 };
 
-export const AutomodPlugin = zeppelinGuildPlugin<AutomodPluginType>()({
+export const AutomodPlugin = guildPlugin<AutomodPluginType>()({
   name: "automod",
-  showInDocs: true,
-  info: pluginInfo,
 
   // prettier-ignore
   dependencies: () => [
@@ -119,6 +116,10 @@ export const AutomodPlugin = zeppelinGuildPlugin<AutomodPluginType>()({
     state.archives = GuildArchives.getGuildInstance(guild.id);
 
     state.cachedAntiraidLevel = await state.antiraidLevels.get();
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 
   async afterLoad(pluginData) {

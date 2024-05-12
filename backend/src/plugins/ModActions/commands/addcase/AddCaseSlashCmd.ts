@@ -1,11 +1,13 @@
+import { GuildMember } from "discord.js";
 import { slashOptions } from "knub";
 import { CaseTypes } from "../../../../data/CaseTypes";
 import { hasPermission } from "../../../../pluginUtils";
+import { resolveMember } from "../../../../utils";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualAddCaseCmd } from "../../functions/actualCommands/actualAddCaseCmd";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { actualAddCaseCmd } from "./actualAddCaseCmd";
 
 const opts = [
   {
@@ -32,7 +34,7 @@ export function AddCaseSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const AddCaseSlashCmd = {
+export const AddCaseSlashCmd = modActionsSlashCmd({
   name: "addcase",
   configPermission: "can_addcase",
   description: "Add an arbitrary case to the specified user without taking any action",
@@ -55,7 +57,7 @@ export const AddCaseSlashCmd = {
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     // The moderator who did the action is the message author or, if used, the specified -mod
-    let mod = interaction.member;
+    let mod = interaction.member as GuildMember;
     const canActAsOther = await hasPermission(pluginData, "can_act_as_other", {
       channel: interaction.channel,
       member: interaction.member,
@@ -63,19 +65,17 @@ export const AddCaseSlashCmd = {
 
     if (options.mod) {
       if (!canActAsOther) {
-        pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(interaction, "You don't have permission to act as another moderator");
+        pluginData.state.common.sendErrorMessage(interaction, "You don't have permission to act as another moderator");
         return;
       }
 
-      mod = options.mod;
+      mod = (await resolveMember(pluginData.client, pluginData.guild, options.mod.id))!;
     }
 
     actualAddCaseCmd(
       pluginData,
       interaction,
-      interaction.member,
+      interaction.member as GuildMember,
       mod,
       attachments,
       options.user,
@@ -83,4 +83,4 @@ export const AddCaseSlashCmd = {
       options.reason || "",
     );
   },
-};
+});

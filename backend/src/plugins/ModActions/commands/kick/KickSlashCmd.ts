@@ -1,13 +1,13 @@
-import { ChannelType } from "discord.js";
+import { ChannelType, GuildMember } from "discord.js";
 import { slashOptions } from "knub";
 import { hasPermission } from "../../../../pluginUtils";
-import { UserNotificationMethod } from "../../../../utils";
+import { UserNotificationMethod, resolveMember } from "../../../../utils";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualKickCmd } from "../../functions/actualCommands/actualKickCmd";
 import { readContactMethodsFromArgs } from "../../functions/readContactMethodsFromArgs";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { actualKickCmd } from "./actualKickCmd";
 
 const opts = [
   {
@@ -54,7 +54,7 @@ export function KickSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const KickSlashCmd = {
+export const KickSlashCmd = modActionsSlashCmd({
   name: "kick",
   configPermission: "can_kick",
   description: "Kick the specified member",
@@ -67,14 +67,12 @@ export const KickSlashCmd = {
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     if ((!options.reason || options.reason.trim() === "") && attachments.length < 1) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
+      pluginData.state.common.sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
 
       return;
     }
 
-    let mod = interaction.member;
+    let mod = interaction.member as GuildMember;
     const canActAsOther = await hasPermission(pluginData, "can_act_as_other", {
       channel: interaction.channel,
       member: interaction.member,
@@ -82,27 +80,25 @@ export const KickSlashCmd = {
 
     if (options.mod) {
       if (!canActAsOther) {
-        pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(interaction, "You don't have permission to act as another moderator");
+        pluginData.state.common.sendErrorMessage(interaction, "You don't have permission to act as another moderator");
         return;
       }
 
-      mod = options.mod;
+      mod = (await resolveMember(pluginData.client, pluginData.guild, options.mod.id))!;
     }
 
     let contactMethods: UserNotificationMethod[] | undefined;
     try {
       contactMethods = readContactMethodsFromArgs(options) ?? undefined;
     } catch (e) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, e.message);
+      pluginData.state.common.sendErrorMessage(interaction, e.message);
       return;
     }
 
     actualKickCmd(
       pluginData,
       interaction,
-      interaction.member,
+      interaction.member as GuildMember,
       options.user,
       options.reason || "",
       attachments,
@@ -111,4 +107,4 @@ export const KickSlashCmd = {
       options.clean,
     );
   },
-};
+});

@@ -1,9 +1,10 @@
+import { GuildMember } from "discord.js";
 import { slashOptions } from "knub";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualMassBanCmd } from "../../functions/actualCommands/actualMassBanCmd";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { actualMassBanCmd } from "./actualMassBanCmd";
 
 const opts = [
   {
@@ -29,7 +30,7 @@ export function MassBanSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const MassBanSlashCmd = {
+export const MassBanSlashCmd = modActionsSlashCmd({
   name: "massban",
   configPermission: "can_massban",
   description: "Mass-ban a list of user IDs",
@@ -46,9 +47,7 @@ export const MassBanSlashCmd = {
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     if ((!options.reason || options.reason.trim() === "") && attachments.length < 1) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
+      pluginData.state.common.sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
 
       return;
     }
@@ -56,10 +55,10 @@ export const MassBanSlashCmd = {
     actualMassBanCmd(
       pluginData,
       interaction,
-      options["user-ids"].split(/[\s,\r\n]+/),
-      interaction.member,
+      options["user-ids"].split(/\D+/),
+      interaction.member as GuildMember,
       options.reason || "",
       attachments,
     );
   },
-};
+});

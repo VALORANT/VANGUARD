@@ -1,8 +1,7 @@
 import { commandTypeHelpers as ct } from "../../../../commandTypes";
 import { resolveMember, resolveUser, UnknownUser } from "../../../../utils";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualCasesCmd } from "../../functions/actualCommands/actualCasesCmd";
 import { modActionsMsgCmd } from "../../types";
+import { actualCasesCmd } from "./actualCasesCmd";
 
 const opts = {
   mod: ct.userId({ option: true }),
@@ -39,7 +38,7 @@ export const CasesUserMsgCmd = modActionsMsgCmd({
       (await resolveUser(pluginData.client, args.user));
 
     if (user instanceof UnknownUser) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `User not found`);
+      pluginData.state.common.sendErrorMessage(msg, `User not found`);
       return;
     }
 

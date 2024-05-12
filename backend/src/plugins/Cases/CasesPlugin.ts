@@ -1,14 +1,11 @@
-import { CaseTypes } from "../../data/CaseTypes";
+import { GuildSavedMessages } from "../../data/GuildSavedMessages";
+import { guildPlugin } from "knub";
 import { GuildArchives } from "../../data/GuildArchives";
 import { GuildCases } from "../../data/GuildCases";
 import { GuildLogs } from "../../data/GuildLogs";
-import { GuildSavedMessages } from "../../data/GuildSavedMessages";
-import { Case } from "../../data/entities/Case";
-import { mapToPublicFn } from "../../pluginUtils";
-import { trimPluginDescription } from "../../utils";
+import { makePublicFn } from "../../pluginUtils";
 import { InternalPosterPlugin } from "../InternalPoster/InternalPosterPlugin";
 import { TimeAndDatePlugin } from "../TimeAndDate/TimeAndDatePlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { createCase } from "./functions/createCase";
 import { createCaseNote } from "./functions/createCaseNote";
 import { getCaseEmbed } from "./functions/getCaseEmbed";
@@ -17,7 +14,7 @@ import { getCaseTypeAmountForUserId } from "./functions/getCaseTypeAmountForUser
 import { getRecentCasesByMod } from "./functions/getRecentCasesByMod";
 import { getTotalCasesByMod } from "./functions/getTotalCasesByMod";
 import { postCaseToCaseLogChannel } from "./functions/postToCaseLogChannel";
-import { CaseArgs, CaseNoteArgs, CasesPluginType, zCasesConfig } from "./types";
+import { CasesPluginType, zCasesConfig } from "./types";
 
 // The `any` cast here is to prevent TypeScript from locking up from the circular dependency
 function getLogsPlugin(): Promise<any> {
@@ -40,63 +37,30 @@ const defaultOptions = {
   },
 };
 
-export const CasesPlugin = zeppelinGuildPlugin<CasesPluginType>()({
+export const CasesPlugin = guildPlugin<CasesPluginType>()({
   name: "cases",
-  showInDocs: true,
-  info: {
-    prettyName: "Cases",
-    description: trimPluginDescription(`
-      This plugin contains basic configuration for cases created by other plugins
-    `),
-    configSchema: zCasesConfig,
-  },
 
   dependencies: async () => [TimeAndDatePlugin, InternalPosterPlugin, (await getLogsPlugin()).LogsPlugin],
   configParser: (input) => zCasesConfig.parse(input),
   defaultOptions,
 
-  public: {
-    createCase(pluginData) {
-      return (args: CaseArgs) => {
-        return createCase(pluginData, args);
-      };
-    },
-
-    createCaseNote(pluginData) {
-      return (args: CaseNoteArgs) => {
-        return createCaseNote(pluginData, args);
-      };
-    },
-
-    postCaseToCaseLogChannel(pluginData) {
-      return (caseOrCaseId: Case | number) => {
-        return postCaseToCaseLogChannel(pluginData, caseOrCaseId);
-      };
-    },
-
-    getCaseTypeAmountForUserId(pluginData) {
-      return (userID: string, type: CaseTypes) => {
-        return getCaseTypeAmountForUserId(pluginData, userID, type);
-      };
-    },
-
-    getTotalCasesByMod: mapToPublicFn(getTotalCasesByMod),
-    getRecentCasesByMod: mapToPublicFn(getRecentCasesByMod),
-
-    getCaseEmbed: mapToPublicFn(getCaseEmbed),
-    getCaseSummary: mapToPublicFn(getCaseSummary),
-
-    shouldLogEachMassBanCase(pluginData) {
-      return () => {
+  public(pluginData) {
+    return {
+      createCase: makePublicFn(pluginData, createCase),
+      createCaseNote: makePublicFn(pluginData, createCaseNote),
+      postCaseToCaseLogChannel: makePublicFn(pluginData, postCaseToCaseLogChannel),
+      getCaseTypeAmountForUserId: makePublicFn(pluginData, getCaseTypeAmountForUserId),
+      getTotalCasesByMod: makePublicFn(pluginData, getTotalCasesByMod),
+      getRecentCasesByMod: makePublicFn(pluginData, getRecentCasesByMod),
+      getCaseEmbed: makePublicFn(pluginData, getCaseEmbed),
+      getCaseSummary: makePublicFn(pluginData, getCaseSummary),
+      shouldLogEachMassBanCase: () => {
         return !!pluginData.config.get().log_each_massban_case;
-      };
-    },
-
-    shouldLogEachMassUnbanCase(pluginData) {
-      return () => {
+      },
+      shouldLogEachMassUnbanCase: () => {
         return !!pluginData.config.get().log_each_massunban_case;
-      };
-    },
+      },
+    };
   },
 
   afterLoad(pluginData) {

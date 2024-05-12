@@ -4,7 +4,6 @@ import { canUseEmoji, customEmojiRegex, isEmoji } from "../../../utils";
 import { getMissingChannelPermissions } from "../../../utils/getMissingChannelPermissions";
 import { missingPermissionError } from "../../../utils/missingPermissionError";
 import { readChannelPermissions } from "../../../utils/readChannelPermissions";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { autoReactionsCmd } from "../types";
 
 const requiredPermissions = readChannelPermissions | PermissionsBitField.Flags.AddReactions;
@@ -25,20 +24,16 @@ export const NewAutoReactionsCmd = autoReactionsCmd({
     const me = pluginData.guild.members.cache.get(pluginData.client.user!.id)!;
     const missingPermissions = getMissingChannelPermissions(me, args.channel, requiredPermissions);
     if (missingPermissions) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(
-          msg,
-          `Cannot set auto-reactions for that channel. ${missingPermissionError(missingPermissions)}`,
-        );
+      pluginData.state.common.sendErrorMessage(
+        msg,
+        `Cannot set auto-reactions for that channel. ${missingPermissionError(missingPermissions)}`,
+      );
       return;
     }
 
     for (const reaction of args.reactions) {
       if (!isEmoji(reaction)) {
-        pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(msg, "One or more of the specified reactions were invalid!");
+        void pluginData.state.common.sendErrorMessage(msg, "One or more of the specified reactions were invalid!");
         return;
       }
 
@@ -48,9 +43,10 @@ export const NewAutoReactionsCmd = autoReactionsCmd({
       if (customEmojiMatch) {
         // Custom emoji
         if (!canUseEmoji(pluginData.client, customEmojiMatch[2])) {
-          pluginData
-            .getPlugin(CommonPlugin)
-            .sendErrorMessage(msg, "I can only use regular emojis and custom emojis from this server");
+          pluginData.state.common.sendErrorMessage(
+            msg,
+            "I can only use regular emojis and custom emojis from this server",
+          );
           return;
         }
 
@@ -65,6 +61,6 @@ export const NewAutoReactionsCmd = autoReactionsCmd({
 
     await pluginData.state.autoReactions.set(args.channel.id, finalReactions);
     pluginData.state.cache.delete(args.channel.id);
-    pluginData.getPlugin(CommonPlugin).sendSuccessMessage(msg, `Auto-reactions set for <#${args.channel.id}>`);
+    void pluginData.state.common.sendSuccessMessage(msg, `Auto-reactions set for <#${args.channel.id}>`);
   },
 });

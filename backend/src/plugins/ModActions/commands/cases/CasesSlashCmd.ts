@@ -1,5 +1,7 @@
+import { GuildMember } from "discord.js";
 import { slashOptions } from "knub";
-import { actualCasesCmd } from "../../functions/actualCommands/actualCasesCmd";
+import { modActionsSlashCmd } from "../../types";
+import { actualCasesCmd } from "./actualCasesCmd";
 
 const opts = [
   slashOptions.user({ name: "user", description: "The user to show cases for", required: false }),
@@ -22,7 +24,7 @@ const opts = [
   slashOptions.string({ name: "search", description: "Search reasons", required: false }),
 ];
 
-export const CasesSlashCmd = {
+export const CasesSlashCmd = modActionsSlashCmd({
   name: "cases",
   configPermission: "can_view",
   description: "Show a list of cases the specified user has or the specified mod made",
@@ -36,9 +38,9 @@ export const CasesSlashCmd = {
     return actualCasesCmd(
       pluginData,
       interaction,
-      options.mod,
+      options.mod?.id ?? null,
       options.user,
-      interaction.member,
+      interaction.member as GuildMember,
       options.notes,
       options.warns,
       options.mutes,
@@ -53,4 +55,4 @@ export const CasesSlashCmd = {
       options.search,
     );
   },
-};
+});

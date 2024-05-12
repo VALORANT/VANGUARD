@@ -8,11 +8,11 @@ import {
   TextInputStyle,
 } from "discord.js";
 import { GuildPluginData } from "knub";
-import { canActOn } from "src/pluginUtils";
-import { ModActionsPlugin } from "src/plugins/ModActions/ModActionsPlugin";
 import { logger } from "../../../logger";
+import { canActOn } from "../../../pluginUtils";
 import { renderUserUsername } from "../../../utils";
 import { CaseArgs } from "../../Cases/types";
+import { ModActionsPlugin } from "../../ModActions/ModActionsPlugin";
 import { MODAL_TIMEOUT } from "../commands/ModMenuUserCtxCmd";
 import { ContextMenuPluginType, ModMenuActionType } from "../types";
 import { updateAction } from "./update";
@@ -34,25 +34,21 @@ async function warnAction(
 
   const modactions = pluginData.getPlugin(ModActionsPlugin);
   if (!userCfg.can_use || !(await modactions.hasWarnPermission(executingMember, interaction.channelId))) {
-    await interactionToReply
-      .editReply({
-        content: "Cannot warn: insufficient permissions",
-        embeds: [],
-        components: [],
-      })
-      .catch((err) => logger.error(`Warn interaction reply failed: ${err}`));
+    await interactionToReply.editReply({
+      content: "Cannot warn: insufficient permissions",
+      embeds: [],
+      components: [],
+    });
     return;
   }
 
   const targetMember = await pluginData.guild.members.fetch(target);
   if (!canActOn(pluginData, executingMember, targetMember)) {
-    await interactionToReply
-      .editReply({
-        content: "Cannot warn: insufficient permissions",
-        embeds: [],
-        components: [],
-      })
-      .catch((err) => logger.error(`Warn interaction reply failed: ${err}`));
+    await interactionToReply.editReply({
+      content: "Cannot warn: insufficient permissions",
+      embeds: [],
+      components: [],
+    });
     return;
   }
 
@@ -62,9 +58,7 @@ async function warnAction(
 
   const result = await modactions.warnMember(reason, reason, targetMember.user, targetMember, { caseArgs });
   if (result.status === "failed") {
-    await interactionToReply
-      .editReply({ content: "Error: Failed to warn user", embeds: [], components: [] })
-      .catch((err) => logger.error(`Warn interaction reply failed: ${err}`));
+    await interactionToReply.editReply({ content: "Error: Failed to warn user", embeds: [], components: [] });
     return;
   }
 
@@ -76,9 +70,7 @@ async function warnAction(
     await updateAction(pluginData, executingMember, result.case, evidence);
   }
 
-  await interactionToReply
-    .editReply({ content: muteMessage, embeds: [], components: [] })
-    .catch((err) => logger.error(`Warn interaction reply failed: ${err}`));
+  await interactionToReply.editReply({ content: muteMessage, embeds: [], components: [] });
 }
 
 export async function launchWarnActionModal(
@@ -105,15 +97,12 @@ export async function launchWarnActionModal(
       if (interaction.isButton()) {
         await submitted.deferUpdate().catch((err) => logger.error(`Warn interaction defer failed: ${err}`));
       } else if (interaction.isContextMenuCommand()) {
-        await submitted
-          .deferReply({ ephemeral: true })
-          .catch((err) => logger.error(`Warn interaction defer failed: ${err}`));
+        await submitted.deferReply({ ephemeral: true });
       }
 
       const reason = submitted.fields.getTextInputValue("reason");
       const evidence = submitted.fields.getTextInputValue("evidence");
 
       await warnAction(pluginData, reason, evidence, target, interaction, submitted);
-    })
-    .catch((err) => logger.error(`Warn modal interaction failed: ${err}`));
+    });
 }

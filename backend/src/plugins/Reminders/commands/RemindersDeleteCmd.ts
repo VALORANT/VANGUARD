@@ -1,7 +1,6 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { clearUpcomingReminder } from "../../../data/loops/upcomingRemindersLoop";
 import { sorter } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { remindersCmd } from "../types";
 
 export const RemindersDeleteCmd = remindersCmd({
@@ -17,7 +16,7 @@ export const RemindersDeleteCmd = remindersCmd({
     reminders.sort(sorter("remind_at"));
 
     if (args.num > reminders.length || args.num <= 0) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Unknown reminder");
+      void pluginData.state.common.sendErrorMessage(msg, "Unknown reminder");
       return;
     }
 
@@ -25,6 +24,6 @@ export const RemindersDeleteCmd = remindersCmd({
     clearUpcomingReminder(toDelete);
     await pluginData.state.reminders.delete(toDelete.id);
 
-    pluginData.getPlugin(CommonPlugin).sendSuccessMessage(msg, "Reminder deleted");
+    void pluginData.state.common.sendSuccessMessage(msg, "Reminder deleted");
   },
 });

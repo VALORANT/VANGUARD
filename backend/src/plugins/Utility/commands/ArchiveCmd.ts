@@ -3,7 +3,6 @@ import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { SavedMessage } from "../../../data/entities/SavedMessage";
 import { getDashboardUrl } from "../../../pluginUtils";
 import { utilityCmd, UtilityPluginType } from "../types";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 
 const DEFAULT_COUNT = 50;
 const MAX_COUNT = 1000;
@@ -33,7 +32,7 @@ export async function archiveCmd(pluginData: GuildPluginData<UtilityPluginType>,
   args.count = args.count ?? DEFAULT_COUNT;
 
   if (args.count > MAX_COUNT || args.count <= 0) {
-    pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `Archive count must be between 1 and ${MAX_COUNT}`);
+    pluginData.state.common.sendErrorMessage(msg, `Archive count must be between 1 and ${MAX_COUNT}`);
     return;
   }
 
@@ -45,10 +44,10 @@ export async function archiveCmd(pluginData: GuildPluginData<UtilityPluginType>,
     let responseText = `Archived ${messagesToArchive.length} message${messagesToArchive.length === 1 ? "" : "s"}`;
 
     responseText += `\n${archiveResult}`;
-    await pluginData.getPlugin(CommonPlugin).sendSuccessMessage(msg, responseText);
+    await pluginData.state.common.sendSuccessMessage(msg, responseText);
   } else {
     const responseText = `Found no messages to archive!`;
-    await pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, responseText);
+    await pluginData.state.common.sendErrorMessage(msg, responseText);
   }
 
   await (await archivingMessage).delete();

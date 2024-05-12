@@ -2,7 +2,6 @@ import { GuildChannel } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { canActOn } from "../../../pluginUtils";
 import { resolveRoleId, verboseUserMention } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
 import { RoleManagerPlugin } from "../../RoleManager/RoleManagerPlugin";
 import { rolesCmd } from "../types";
@@ -19,21 +18,19 @@ export const AddRoleCmd = rolesCmd({
 
   async run({ message: msg, args, pluginData }) {
     if (!canActOn(pluginData, msg.member, args.member, true)) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(msg, "Cannot add roles to this user: insufficient permissions");
+      void pluginData.state.common.sendErrorMessage(msg, "Cannot add roles to this user: insufficient permissions");
       return;
     }
 
     const roleId = await resolveRoleId(pluginData.client, pluginData.guild.id, args.role);
     if (!roleId) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Invalid role id");
+      void pluginData.state.common.sendErrorMessage(msg, "Invalid role id");
       return;
     }
 
     const config = await pluginData.config.getForMessage(msg);
     if (!config.assignable_roles.includes(roleId)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "You cannot assign that role");
+      void pluginData.state.common.sendErrorMessage(msg, "You cannot assign that role");
       return;
     }
 
@@ -43,12 +40,12 @@ export const AddRoleCmd = rolesCmd({
       pluginData.getPlugin(LogsPlugin).logBotAlert({
         body: `Unknown role configured for 'roles' plugin: ${roleId}`,
       });
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "You cannot assign that role");
+      void pluginData.state.common.sendErrorMessage(msg, "You cannot assign that role");
       return;
     }
 
     if (args.member.roles.cache.has(roleId)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Member already has that role");
+      void pluginData.state.common.sendErrorMessage(msg, "Member already has that role");
       return;
     }
 
@@ -60,8 +57,9 @@ export const AddRoleCmd = rolesCmd({
       roles: [role],
     });
 
-    pluginData
-      .getPlugin(CommonPlugin)
-      .sendSuccessMessage(msg, `Added role **${role.name}** to ${verboseUserMention(args.member.user)}!`);
+    void pluginData.state.common.sendSuccessMessage(
+      msg,
+      `Added role **${role.name}** to ${verboseUserMention(args.member.user)}!`,
+    );
   },
 });

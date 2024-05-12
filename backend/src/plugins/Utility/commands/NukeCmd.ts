@@ -6,7 +6,6 @@ import { canActOn } from "../../../pluginUtils";
 import { DAYS, HOURS, SECONDS, noop, resolveMember } from "../../../utils";
 import { cleanMessages } from "../functions/cleanMessages";
 import { UtilityPluginType, utilityCmd } from "../types";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 
 const MAX_NUKE_TIME = 1 * DAYS;
 const DEFAULT_NUKE_TIME = 2 * HOURS;
@@ -50,21 +49,19 @@ export const NukeCmd = utilityCmd({
 
   async run({ message: msg, args, pluginData }) {
     if (args.time && args.time > MAX_NUKE_TIME) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(msg, `Maximum nuke time is ${humanizeDurationShort(MAX_NUKE_TIME)}`);
+      pluginData.state.common.sendErrorMessage(msg, `Maximum nuke time is ${humanizeDurationShort(MAX_NUKE_TIME)}`);
       return;
     }
 
     if (args.user === pluginData.client.user?.id) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `I don't want to nuke my own messages!`);
+      pluginData.state.common.sendErrorMessage(msg, `I don't want to nuke my own messages!`);
       return;
     }
 
     const memberToNuke = await resolveMember(pluginData.client, pluginData.guild, args.user);
 
     if (memberToNuke && !canActOn(pluginData, msg.member, memberToNuke)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `You cannot nuke this member's messages.`);
+      pluginData.state.common.sendErrorMessage(msg, `You cannot nuke this member's messages.`);
       return;
     }
 
@@ -77,7 +74,7 @@ export const NukeCmd = utilityCmd({
       await cleanup(
         nukingMessage,
         msg,
-        await pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, `Found no messages to nuke!`),
+        await pluginData.state.common.sendErrorMessage(msg, `Found no messages to nuke!`),
       );
 
       return;
@@ -105,10 +102,6 @@ export const NukeCmd = utilityCmd({
       );
     }
 
-    await cleanup(
-      nukingMessage,
-      msg,
-      await pluginData.getPlugin(CommonPlugin).sendSuccessMessage(msg, responseText.join("\n")),
-    );
+    await cleanup(nukingMessage, msg, await pluginData.state.common.sendSuccessMessage(msg, responseText.join("\n")));
   },
 });

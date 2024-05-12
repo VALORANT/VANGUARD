@@ -1,6 +1,6 @@
-import { PluginOptions } from "knub";
+import { PluginOptions, guildPlugin } from "knub";
 import { GuildSavedMessages } from "../../data/GuildSavedMessages";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { SaveMessagesToDBCmd } from "./commands/SaveMessagesToDB";
 import { SavePinsToDBCmd } from "./commands/SavePinsToDB";
 import { MessageCreateEvt, MessageDeleteBulkEvt, MessageDeleteEvt, MessageUpdateEvt } from "./events/SaveMessagesEvts";
@@ -20,9 +20,8 @@ const defaultOptions: PluginOptions<MessageSaverPluginType> = {
   ],
 };
 
-export const MessageSaverPlugin = zeppelinGuildPlugin<MessageSaverPluginType>()({
+export const MessageSaverPlugin = guildPlugin<MessageSaverPluginType>()({
   name: "message_saver",
-  showInDocs: false,
 
   configParser: (input) => zMessageSaverConfig.parse(input),
   defaultOptions,
@@ -44,5 +43,9 @@ export const MessageSaverPlugin = zeppelinGuildPlugin<MessageSaverPluginType>()(
   beforeLoad(pluginData) {
     const { state, guild } = pluginData;
     state.savedMessages = GuildSavedMessages.getGuildInstance(guild.id);
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 });

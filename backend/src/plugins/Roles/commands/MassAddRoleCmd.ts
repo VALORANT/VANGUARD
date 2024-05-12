@@ -3,7 +3,6 @@ import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { logger } from "../../../logger";
 import { canActOn } from "../../../pluginUtils";
 import { resolveMember, resolveRoleId, successMessage } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { LogsPlugin } from "../../Logs/LogsPlugin";
 import { RoleManagerPlugin } from "../../RoleManager/RoleManagerPlugin";
 import { rolesCmd } from "../types";
@@ -30,22 +29,23 @@ export const MassAddRoleCmd = rolesCmd({
 
     for (const member of members) {
       if (!canActOn(pluginData, msg.member, member, true)) {
-        pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(msg, "Cannot add roles to 1 or more specified members: insufficient permissions");
+        void pluginData.state.common.sendErrorMessage(
+          msg,
+          "Cannot add roles to 1 or more specified members: insufficient permissions",
+        );
         return;
       }
     }
 
     const roleId = await resolveRoleId(pluginData.client, pluginData.guild.id, args.role);
     if (!roleId) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Invalid role id");
+      void pluginData.state.common.sendErrorMessage(msg, "Invalid role id");
       return;
     }
 
     const config = await pluginData.config.getForMessage(msg);
     if (!config.assignable_roles.includes(roleId)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "You cannot assign that role");
+      void pluginData.state.common.sendErrorMessage(msg, "You cannot assign that role");
       return;
     }
 
@@ -54,7 +54,7 @@ export const MassAddRoleCmd = rolesCmd({
       pluginData.getPlugin(LogsPlugin).logBotAlert({
         body: `Unknown role configured for 'roles' plugin: ${roleId}`,
       });
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "You cannot assign that role");
+      void pluginData.state.common.sendErrorMessage(msg, "You cannot assign that role");
       return;
     }
 

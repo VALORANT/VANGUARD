@@ -1,9 +1,8 @@
 import { commandTypeHelpers as ct } from "../../../../commandTypes";
-import { actualMassKickCmd } from "../../functions/actualCommands/actualMassKickCmd";
+import { actualMassKickCmd } from "./actualMassKickCmd";
 import { modActionsMsgCmd } from "../../types";
 import { getContextChannel, sendContextResponse } from "../../../../pluginUtils";
 import { waitForReply } from "knub/helpers";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
 
 export const MassKickMsgCmd = modActionsMsgCmd({
   trigger: "masskick",
@@ -21,7 +20,7 @@ export const MassKickMsgCmd = modActionsMsgCmd({
     sendContextResponse(msg, "Kick reason? `cancel` to cancel");
     const kickReasonReply = await waitForReply(pluginData.client, await getContextChannel(msg), msg.author.id);
     if (!kickReasonReply || !kickReasonReply.content || kickReasonReply.content.toLowerCase().trim() === "cancel") {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Cancelled");
+      pluginData.state.common.sendErrorMessage(msg, "Cancelled");
       return;
     }
 

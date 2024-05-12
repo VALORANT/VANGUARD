@@ -12,7 +12,7 @@ import {
   TextBasedChannel,
   User,
 } from "discord.js";
-import { AnyPluginData, CommandContext, ExtendedMatchParams, GuildPluginData, helpers } from "knub";
+import { AnyPluginData, BasePluginData, CommandContext, ExtendedMatchParams, GuildPluginData, helpers } from "knub";
 import { isStaff } from "./staff";
 import { TZeppelinKnub } from "./types";
 import { Tail } from "./utils/typeUtils";
@@ -90,8 +90,8 @@ export async function sendContextResponse(
       context.replied
         ? context.followUp(options)
         : context.deferred
-        ? context.editReply(options)
-        : context.reply(options)
+          ? context.editReply(options)
+          : context.reply(options)
     ) as Promise<Message>;
   }
 
@@ -147,3 +147,16 @@ export function mapToPublicFn<T extends AnyFn>(inputFn: T) {
     };
   };
 }
+
+type FnWithPluginData<TPluginData> = (pluginData: TPluginData, ...args: any[]) => any;
+
+export function makePublicFn<TPluginData extends BasePluginData<any>, T extends FnWithPluginData<TPluginData>>(
+  pluginData: TPluginData,
+  fn: T,
+) {
+  return (...args: Tail<Parameters<T>>): ReturnType<T> => {
+    return fn(pluginData, ...args);
+  };
+}
+
+// ???

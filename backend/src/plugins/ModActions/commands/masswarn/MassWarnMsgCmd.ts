@@ -1,9 +1,8 @@
 import { commandTypeHelpers as ct } from "../../../../commandTypes";
-import { actualMassWarnCmd } from "../../functions/actualCommands/actualMassWarnCmd";
+import { actualMassWarnCmd } from "./actualMassWarnCmd";
 import { modActionsMsgCmd } from "../../types";
 import { getContextChannel, sendContextResponse } from "../../../../pluginUtils";
 import { waitForReply } from "knub/helpers";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
 
 export const MassWarnMsgCmd = modActionsMsgCmd({
   trigger: "masswarn",
@@ -21,7 +20,7 @@ export const MassWarnMsgCmd = modActionsMsgCmd({
     sendContextResponse(msg, "Warn reason? `cancel` to cancel");
     const warnReasonReply = await waitForReply(pluginData.client, await getContextChannel(msg), msg.author.id);
     if (!warnReasonReply || !warnReasonReply.content || warnReasonReply.content.toLowerCase().trim() === "cancel") {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(msg, "Cancelled");
+      pluginData.state.common.sendErrorMessage(msg, "Cancelled");
       return;
     }
 

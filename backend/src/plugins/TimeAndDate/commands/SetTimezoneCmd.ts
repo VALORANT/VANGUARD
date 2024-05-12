@@ -2,7 +2,6 @@ import { escapeInlineCode } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { trimLines } from "../../../utils";
 import { parseFuzzyTimezone } from "../../../utils/parseFuzzyTimezone";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { timeAndDateCmd } from "../types";
 
 export const SetTimezoneCmd = timeAndDateCmd({
@@ -16,7 +15,7 @@ export const SetTimezoneCmd = timeAndDateCmd({
   async run({ pluginData, message, args }) {
     const parsedTz = parseFuzzyTimezone(args.timezone);
     if (!parsedTz) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(
+      void pluginData.state.common.sendErrorMessage(
         message,
         trimLines(`
         Invalid timezone: \`${escapeInlineCode(args.timezone)}\`
@@ -28,6 +27,6 @@ export const SetTimezoneCmd = timeAndDateCmd({
     }
 
     await pluginData.state.memberTimezones.set(message.author.id, parsedTz);
-    pluginData.getPlugin(CommonPlugin).sendSuccessMessage(message, `Your timezone is now set to **${parsedTz}**`);
+    void pluginData.state.common.sendSuccessMessage(message, `Your timezone is now set to **${parsedTz}**`);
   },
 });

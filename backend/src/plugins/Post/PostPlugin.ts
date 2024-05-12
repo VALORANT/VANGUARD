@@ -1,11 +1,11 @@
-import { PluginOptions } from "knub";
+import { PluginOptions, guildPlugin } from "knub";
 import { onGuildEvent } from "../../data/GuildEvents";
 import { GuildLogs } from "../../data/GuildLogs";
 import { GuildSavedMessages } from "../../data/GuildSavedMessages";
 import { GuildScheduledPosts } from "../../data/GuildScheduledPosts";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { LogsPlugin } from "../Logs/LogsPlugin";
 import { TimeAndDatePlugin } from "../TimeAndDate/TimeAndDatePlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { EditCmd } from "./commands/EditCmd";
 import { EditEmbedCmd } from "./commands/EditEmbedCmd";
 import { PostCmd } from "./commands/PostCmd";
@@ -30,13 +30,8 @@ const defaultOptions: PluginOptions<PostPluginType> = {
   ],
 };
 
-export const PostPlugin = zeppelinGuildPlugin<PostPluginType>()({
+export const PostPlugin = guildPlugin<PostPluginType>()({
   name: "post",
-  showInDocs: true,
-  info: {
-    prettyName: "Post",
-    configSchema: zPostConfig,
-  },
 
   dependencies: () => [TimeAndDatePlugin, LogsPlugin],
   configParser: (input) => zPostConfig.parse(input),
@@ -59,6 +54,10 @@ export const PostPlugin = zeppelinGuildPlugin<PostPluginType>()({
     state.savedMessages = GuildSavedMessages.getGuildInstance(guild.id);
     state.scheduledPosts = GuildScheduledPosts.getGuildInstance(guild.id);
     state.logs = new GuildLogs(guild.id);
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 
   afterLoad(pluginData) {

@@ -1,9 +1,10 @@
 import { slashOptions } from "knub";
-import { actualMassWarnCmd } from "../../functions/actualCommands/actualMassWarnCmd";
+import { actualMassWarnCmd } from "./actualMassWarnCmd";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { modActionsSlashCmd } from "../../types";
+import { GuildMember } from "discord.js";
 
 const opts = [
   {
@@ -29,7 +30,7 @@ export function MassWarnSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const MassWarnSlashCmd = {
+export const MassWarnSlashCmd = modActionsSlashCmd({
   name: "masswarn",
   configPermission: "can_masswarn",
   description: "Mass-warn a list of user IDs",
@@ -46,9 +47,7 @@ export const MassWarnSlashCmd = {
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     if ((!options.reason || options.reason.trim() === "") && attachments.length < 1) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
+      pluginData.state.common.sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
 
       return;
     }
@@ -57,9 +56,9 @@ export const MassWarnSlashCmd = {
       pluginData,
       interaction,
       options["user-ids"].split(/[\s,\r\n]+/),
-      interaction.member,
+      interaction.member as GuildMember,
       options.reason || "",
       attachments,
     );
   },
-};
+});

@@ -12,13 +12,12 @@ import {
 import { GuildPluginData, guildPluginUserContextMenuCommand } from "knub";
 import { Case } from "../../../data/entities/Case";
 import { logger } from "../../../logger";
-import { ModActionsPlugin } from "../../ModActions/ModActionsPlugin";
 import { SECONDS, UnknownUser, emptyEmbedValue, renderUserUsername, resolveUser, trimLines } from "../../../utils";
 import { asyncMap } from "../../../utils/async";
 import { getChunkedEmbedFields } from "../../../utils/getChunkedEmbedFields";
 import { getGuildPrefix } from "../../../utils/getGuildPrefix";
 import { CasesPlugin } from "../../Cases/CasesPlugin";
-import { UtilityPlugin } from "../../Utility/UtilityPlugin";
+import { ModActionsPlugin } from "../../ModActions/ModActionsPlugin";
 import { getUserInfoEmbed } from "../../Utility/functions/getUserInfoEmbed";
 import { launchBanActionModal } from "../actions/ban";
 import { launchMuteActionModal } from "../actions/mute";
@@ -41,9 +40,7 @@ export const ModMenuCmd = guildPluginUserContextMenuCommand({
   name: "Mod Menu",
   defaultMemberPermissions: PermissionFlagsBits.ViewAuditLog.toString(),
   async run({ pluginData, interaction }) {
-    await interaction
-      .deferReply({ ephemeral: true })
-      .catch((err) => logger.error(`Mod menu interaction defer failed: ${err}`));
+    await interaction.deferReply({ ephemeral: true });
 
     // Run permission checks for executing user.
     const executingMember = await pluginData.guild.members.fetch(interaction.user.id);
@@ -51,22 +48,14 @@ export const ModMenuCmd = guildPluginUserContextMenuCommand({
       channelId: interaction.channelId,
       member: executingMember,
     });
-    const utility = pluginData.getPlugin(UtilityPlugin);
-    if (
-      !userCfg.can_use ||
-      (await !utility.hasPermission(executingMember, interaction.channelId, "can_open_mod_menu"))
-    ) {
-      await interaction
-        .followUp({ content: "Error: Insufficient Permissions" })
-        .catch((err) => logger.error(`Mod menu interaction follow up failed: ${err}`));
+    if (!userCfg.can_use || !userCfg.can_open_mod_menu) {
+      await interaction.followUp({ content: "Error: Insufficient Permissions" });
       return;
     }
 
     const user = await resolveUser(pluginData.client, interaction.targetId);
     if (!user.id) {
-      await interaction
-        .followUp("Error: User not found")
-        .catch((err) => logger.error(`Mod menu interaction follow up failed: ${err}`));
+      await interaction.followUp("Error: User not found");
       return;
     }
 

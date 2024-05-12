@@ -1,6 +1,7 @@
 import { slashOptions } from "knub";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
 import { updateCase } from "../../functions/updateCase";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_UPDATE } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
 
@@ -29,7 +30,7 @@ export function UpdateSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const UpdateSlashCmd = {
+export const UpdateSlashCmd = modActionsSlashCmd({
   name: "update",
   configPermission: "can_note",
   description: "Update the specified case (or your latest case) by adding more notes to it",
@@ -44,9 +45,9 @@ export const UpdateSlashCmd = {
       pluginData,
       interaction,
       interaction.user,
-      options.caseNumber,
-      options.note,
+      options["case-number"] ? Number(options["case-number"]) : null,
+      options.reason ?? "",
       retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_UPDATE, options, "attachment"),
     );
   },
-};
+});

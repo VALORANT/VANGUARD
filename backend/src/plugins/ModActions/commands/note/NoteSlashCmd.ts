@@ -1,9 +1,9 @@
 import { slashOptions } from "knub";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualNoteCmd } from "../../functions/actualCommands/actualNoteCmd";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { actualNoteCmd } from "./actualNoteCmd";
 
 const opts = [
   {
@@ -29,7 +29,7 @@ export function NoteSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const NoteSlashCmd = {
+export const NoteSlashCmd = modActionsSlashCmd({
   name: "note",
   configPermission: "can_note",
   description: "Add a note to the specified user",
@@ -42,13 +42,11 @@ export const NoteSlashCmd = {
     const attachments = retrieveMultipleOptions(NUMBER_ATTACHMENTS_CASE_CREATION, options, "attachment");
 
     if ((!options.note || options.note.trim() === "") && attachments.length < 1) {
-      pluginData
-        .getPlugin(CommonPlugin)
-        .sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
+      pluginData.state.common.sendErrorMessage(interaction, "Text or attachment required", undefined, undefined, true);
 
       return;
     }
 
     actualNoteCmd(pluginData, interaction, interaction.user, attachments, options.user, options.note || "");
   },
-};
+});

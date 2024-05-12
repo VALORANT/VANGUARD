@@ -1,15 +1,15 @@
-import { ChannelType } from "discord.js";
+import { ChannelType, GuildMember } from "discord.js";
 import { slashOptions } from "knub";
 import { canActOn, hasPermission } from "../../../../pluginUtils";
 import { UserNotificationMethod, convertDelayStringToMS, resolveMember } from "../../../../utils";
 import { generateAttachmentSlashOptions, retrieveMultipleOptions } from "../../../../utils/multipleSlashOptions";
 import { waitForButtonConfirm } from "../../../../utils/waitForInteraction";
-import { CommonPlugin } from "../../../Common/CommonPlugin";
-import { actualMuteCmd } from "../../functions/actualCommands/actualMuteCmd";
 import { isBanned } from "../../functions/isBanned";
 import { readContactMethodsFromArgs } from "../../functions/readContactMethodsFromArgs";
+import { modActionsSlashCmd } from "../../types";
 import { NUMBER_ATTACHMENTS_CASE_CREATION } from "../constants";
 import { slashCmdReasonAliasAutocomplete } from "../../functions/slashCmdReasonAliasAutocomplete";
+import { actualMuteCmd } from "./actualMuteCmd";
 
 const opts = [
   slashOptions.string({ name: "time", description: "The duration of the mute", required: false }),
@@ -52,7 +52,7 @@ export function MuteSlashCmdAutocomplete({ pluginData, interaction }) {
   slashCmdReasonAliasAutocomplete({ pluginData, interaction });
 }
 
-export const MuteSlashCmd = {
+export const MuteSlashCmd = modActionsSlashCmd({
   name: "mute",
   configPermission: "can_mute",
   description: "Mute the specified member",
@@ -69,34 +69,33 @@ export const MuteSlashCmd = {
       const _isBanned = await isBanned(pluginData, options.user.id);
       const prefix = pluginData.fullConfig.prefix;
       if (_isBanned) {
-        pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(interaction, `User is banned. Use \`${prefix}forcemute\` if you want to mute them anyway.`);
+        pluginData.state.common.sendErrorMessage(
+          interaction,
+          `User is banned. Use \`${prefix}forcemute\` if you want to mute them anyway.`,
+        );
         return;
       } else {
         // Ask the mod if we should upgrade to a forcemute as the user is not on the server
         const reply = await waitForButtonConfirm(
           interaction,
           { content: "User not found on the server, forcemute instead?" },
-          { confirmText: "Yes", cancelText: "No", restrictToId: interaction.member.id },
+          { confirmText: "Yes", cancelText: "No", restrictToId: interaction.user.id },
         );
 
         if (!reply) {
-          pluginData
-            .getPlugin(CommonPlugin)
-            .sendErrorMessage(interaction, "User not on server, mute cancelled by moderator");
+          pluginData.state.common.sendErrorMessage(interaction, "User not on server, mute cancelled by moderator");
           return;
         }
       }
     }
 
     // Make sure we're allowed to mute this member
-    if (memberToMute && !canActOn(pluginData, interaction.member, memberToMute)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, "Cannot mute: insufficient permissions");
+    if (memberToMute && !canActOn(pluginData, interaction.member as GuildMember, memberToMute)) {
+      pluginData.state.common.sendErrorMessage(interaction, "Cannot mute: insufficient permissions");
       return;
     }
 
-    let mod = interaction.member;
+    let mod = interaction.member as GuildMember;
     let ppId: string | undefined;
     const canActAsOther = await hasPermission(pluginData, "can_act_as_other", {
       channel: interaction.channel,
@@ -105,19 +104,17 @@ export const MuteSlashCmd = {
 
     if (options.mod) {
       if (!canActAsOther) {
-        pluginData
-          .getPlugin(CommonPlugin)
-          .sendErrorMessage(interaction, "You don't have permission to act as another moderator");
+        pluginData.state.common.sendErrorMessage(interaction, "You don't have permission to act as another moderator");
         return;
       }
 
-      mod = options.mod;
+      mod = (await resolveMember(pluginData.client, pluginData.guild, options.mod.id))!;
       ppId = interaction.user.id;
     }
 
     const convertedTime = options.time ? convertDelayStringToMS(options.time) ?? undefined : undefined;
     if (options.time && !convertedTime) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, `Could not convert ${options.time} to a delay`);
+      pluginData.state.common.sendErrorMessage(interaction, `Could not convert ${options.time} to a delay`);
       return;
     }
 
@@ -125,7 +122,7 @@ export const MuteSlashCmd = {
     try {
       contactMethods = readContactMethodsFromArgs(options) ?? undefined;
     } catch (e) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(interaction, e.message);
+      pluginData.state.common.sendErrorMessage(interaction, e.message);
       return;
     }
 
@@ -141,4 +138,4 @@ export const MuteSlashCmd = {
       contactMethods,
     );
   },
-};
+});

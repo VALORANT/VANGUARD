@@ -1,9 +1,8 @@
-import { PluginOptions } from "knub";
+import { PluginOptions, guildPlugin } from "knub";
 import { GuildLogs } from "../../data/GuildLogs";
-import { trimPluginDescription } from "../../utils";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { LogsPlugin } from "../Logs/LogsPlugin";
 import { RoleManagerPlugin } from "../RoleManager/RoleManagerPlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { AddRoleCmd } from "./commands/AddRoleCmd";
 import { MassAddRoleCmd } from "./commands/MassAddRoleCmd";
 import { MassRemoveRoleCmd } from "./commands/MassRemoveRoleCmd";
@@ -32,16 +31,8 @@ const defaultOptions: PluginOptions<RolesPluginType> = {
   ],
 };
 
-export const RolesPlugin = zeppelinGuildPlugin<RolesPluginType>()({
+export const RolesPlugin = guildPlugin<RolesPluginType>()({
   name: "roles",
-  showInDocs: true,
-  info: {
-    prettyName: "Roles",
-    description: trimPluginDescription(`
-      Enables authorised users to add and remove whitelisted roles with a command.
-    `),
-    configSchema: zRolesConfig,
-  },
 
   dependencies: () => [LogsPlugin, RoleManagerPlugin],
   configParser: (input) => zRolesConfig.parse(input),
@@ -59,5 +50,9 @@ export const RolesPlugin = zeppelinGuildPlugin<RolesPluginType>()({
     const { state, guild } = pluginData;
 
     state.logs = new GuildLogs(guild.id);
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 });

@@ -1,6 +1,13 @@
 import { ChatInputCommandInteraction, Message } from "discord.js";
 import { EventEmitter } from "events";
-import { BasePluginType, guildPluginEventListener, guildPluginMessageCommand, guildPluginSlashGroup } from "knub";
+import {
+  BasePluginType,
+  guildPluginEventListener,
+  guildPluginMessageCommand,
+  guildPluginSlashCommand,
+  guildPluginSlashGroup,
+  pluginUtils,
+} from "knub";
 import z from "zod";
 import { Queue } from "../../Queue";
 import { GuildCases } from "../../data/GuildCases";
@@ -10,6 +17,7 @@ import { GuildTempbans } from "../../data/GuildTempbans";
 import { Case } from "../../data/entities/Case";
 import { UserNotificationMethod, UserNotificationResult } from "../../utils";
 import { CaseArgs } from "../Cases/types";
+import { CommonPlugin } from "../Common/CommonPlugin";
 
 export type AttachmentLinkReactionType = "none" | "warn" | "restrict" | null;
 
@@ -32,7 +40,6 @@ export const zModActionsConfig = z.strictObject({
   warn_notify_message: z.string(),
   ban_delete_message_days: z.number(),
   attachment_link_reaction: z.nullable(z.union([z.literal("none"), z.literal("warn"), z.literal("restrict")])),
-  attachment_storing_channel: z.nullable(z.string()),
   can_note: z.boolean(),
   can_warn: z.boolean(),
   can_mute: z.boolean(),
@@ -85,6 +92,8 @@ export interface ModActionsPluginType extends BasePluginType {
     masswarnQueue: Queue;
 
     events: ModActionsEventEmitter;
+
+    common: pluginUtils.PluginPublicInterface<typeof CommonPlugin>;
   };
 }
 
@@ -160,4 +169,5 @@ export type ModActionType = "note" | "warn" | "mute" | "unmute" | "kick" | "ban"
 
 export const modActionsMsgCmd = guildPluginMessageCommand<ModActionsPluginType>();
 export const modActionsSlashGroup = guildPluginSlashGroup<ModActionsPluginType>();
+export const modActionsSlashCmd = guildPluginSlashCommand<ModActionsPluginType>();
 export const modActionsEvt = guildPluginEventListener<ModActionsPluginType>();

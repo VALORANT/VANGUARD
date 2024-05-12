@@ -2,7 +2,6 @@ import { escapeBold } from "discord.js";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { canActOn } from "../../../pluginUtils";
 import { errorMessage } from "../../../utils";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { utilityCmd } from "../types";
 
 export const NicknameCmd = utilityCmd({
@@ -46,11 +45,9 @@ export const NicknameCmd = utilityCmd({
       return;
     }
 
-    pluginData
-      .getPlugin(CommonPlugin)
-      .sendSuccessMessage(
-        msg,
-        `Changed nickname of <@!${args.member.id}> from **${oldNickname}** to **${args.nickname}**`,
-      );
+    void pluginData.state.common.sendSuccessMessage(
+      msg,
+      `Changed nickname of <@!${args.member.id}> from **${oldNickname}** to **${args.nickname}**`,
+    );
   },
 });

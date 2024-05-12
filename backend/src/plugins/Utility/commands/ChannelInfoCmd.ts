@@ -1,5 +1,4 @@
 import { commandTypeHelpers as ct } from "../../../commandTypes";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { getChannelInfoEmbed } from "../functions/getChannelInfoEmbed";
 import { utilityCmd } from "../types";
 
@@ -16,7 +15,7 @@ export const ChannelInfoCmd = utilityCmd({
   async run({ message, args, pluginData }) {
     const embed = await getChannelInfoEmbed(pluginData, args.channel);
     if (!embed) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(message, "Unknown channel");
+      void pluginData.state.common.sendErrorMessage(message, "Unknown channel");
       return;
     }
 

@@ -1,8 +1,8 @@
-import { PluginOptions } from "knub";
+import { PluginOptions, guildPlugin } from "knub";
 import { onGuildEvent } from "../../data/GuildEvents";
 import { GuildReminders } from "../../data/GuildReminders";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { TimeAndDatePlugin } from "../TimeAndDate/TimeAndDatePlugin";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
 import { RemindCmd } from "./commands/RemindCmd";
 import { RemindersCmd } from "./commands/RemindersCmd";
 import { RemindersDeleteCmd } from "./commands/RemindersDeleteCmd";
@@ -23,13 +23,8 @@ const defaultOptions: PluginOptions<RemindersPluginType> = {
   ],
 };
 
-export const RemindersPlugin = zeppelinGuildPlugin<RemindersPluginType>()({
+export const RemindersPlugin = guildPlugin<RemindersPluginType>()({
   name: "reminders",
-  showInDocs: true,
-  info: {
-    prettyName: "Reminders",
-    configSchema: zRemindersConfig,
-  },
 
   dependencies: () => [TimeAndDatePlugin],
   configParser: (input) => zRemindersConfig.parse(input),
@@ -48,6 +43,10 @@ export const RemindersPlugin = zeppelinGuildPlugin<RemindersPluginType>()({
     state.reminders = GuildReminders.getGuildInstance(guild.id);
     state.tries = new Map();
     state.unloaded = false;
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 
   afterLoad(pluginData) {

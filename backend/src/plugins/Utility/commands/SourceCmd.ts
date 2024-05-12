@@ -2,7 +2,6 @@ import moment from "moment-timezone";
 import { commandTypeHelpers as ct } from "../../../commandTypes";
 import { getBaseUrl } from "../../../pluginUtils";
 import { canReadChannel } from "../../../utils/canReadChannel";
-import { CommonPlugin } from "../../Common/CommonPlugin";
 import { utilityCmd } from "../types";
 
 export const SourceCmd = utilityCmd({
@@ -17,13 +16,13 @@ export const SourceCmd = utilityCmd({
 
   async run({ message: cmdMessage, args, pluginData }) {
     if (!canReadChannel(args.message.channel, cmdMessage.member)) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(cmdMessage, "Unknown message");
+      void pluginData.state.common.sendErrorMessage(cmdMessage, "Unknown message");
       return;
     }
 
     const message = await args.message.channel.messages.fetch(args.message.messageId);
     if (!message) {
-      pluginData.getPlugin(CommonPlugin).sendErrorMessage(cmdMessage, "Unknown message");
+      void pluginData.state.common.sendErrorMessage(cmdMessage, "Unknown message");
       return;
     }
 

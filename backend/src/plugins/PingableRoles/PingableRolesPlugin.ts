@@ -1,6 +1,6 @@
-import { PluginOptions } from "knub";
+import { PluginOptions, guildPlugin } from "knub";
 import { GuildPingableRoles } from "../../data/GuildPingableRoles";
-import { zeppelinGuildPlugin } from "../ZeppelinPluginBlueprint";
+import { CommonPlugin } from "../Common/CommonPlugin";
 import { PingableRoleDisableCmd } from "./commands/PingableRoleDisableCmd";
 import { PingableRoleEnableCmd } from "./commands/PingableRoleEnableCmd";
 import { PingableRolesPluginType, zPingableRolesConfig } from "./types";
@@ -19,13 +19,8 @@ const defaultOptions: PluginOptions<PingableRolesPluginType> = {
   ],
 };
 
-export const PingableRolesPlugin = zeppelinGuildPlugin<PingableRolesPluginType>()({
+export const PingableRolesPlugin = guildPlugin<PingableRolesPluginType>()({
   name: "pingable_roles",
-  showInDocs: true,
-  info: {
-    prettyName: "Pingable roles",
-    configSchema: zPingableRolesConfig,
-  },
 
   configParser: (input) => zPingableRolesConfig.parse(input),
   defaultOptions,
@@ -49,5 +44,9 @@ export const PingableRolesPlugin = zeppelinGuildPlugin<PingableRolesPluginType>(
     state.pingableRoles = GuildPingableRoles.getGuildInstance(guild.id);
     state.cache = new Map();
     state.timeouts = new Map();
+  },
+
+  beforeStart(pluginData) {
+    pluginData.state.common = pluginData.getPlugin(CommonPlugin);
   },
 });
