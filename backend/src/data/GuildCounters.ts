@@ -1,5 +1,5 @@
 import moment from "moment-timezone";
-import { sql_escape_string } from "src/utils/escapeString";
+import { sql_escape_string } from "../utils/escapeString";
 import { FindOptionsWhere, In, IsNull, Not, Repository } from "typeorm";
 import { Queue } from "../Queue";
 import { DAYS, DBDateFormat, HOURS, MINUTES } from "../utils";
