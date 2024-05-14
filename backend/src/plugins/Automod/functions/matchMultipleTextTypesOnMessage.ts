@@ -27,7 +27,6 @@ export async function* matchMultipleTextTypesOnMessage(
   msg: SavedMessage,
 ): AsyncIterableIterator<YieldedContent> {
   const member = await resolveMember(pluginData.client, pluginData.guild, msg.user_id);
-  if (!member) return;
 
   if (trigger.match_messages && msg.data.content) {
     yield ["message", msg.data.content];
@@ -41,7 +40,7 @@ export async function* matchMultipleTextTypesOnMessage(
     yield ["embed", JSON.stringify(copiedEmbed)];
   }
 
-  if (trigger.match_visible_names) {
+  if (trigger.match_visible_names && member) {
     yield ["visiblename", member.displayName || msg.data.author.username];
   }
 
@@ -49,11 +48,11 @@ export async function* matchMultipleTextTypesOnMessage(
     yield ["username", renderUsername(msg.data.author.username, msg.data.author.discriminator)];
   }
 
-  if (trigger.match_nicknames && member.nickname) {
+  if (trigger.match_nicknames && member?.nickname) {
     yield ["nickname", member.nickname];
   }
 
-  for (const activity of member.presence?.activities ?? []) {
+  for (const activity of member?.presence?.activities ?? []) {
     if (activity.type === ActivityType.Custom) {
       yield ["customstatus", `${activity.emoji} ${activity.name}`];
       break;
