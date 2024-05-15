@@ -93,3 +93,5 @@ config-errors.txt
 # Legacy data folders
 /docker/development/data
 /docker/production/data
+
+/update.sh
