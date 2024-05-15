@@ -241,12 +241,12 @@ export class GuildSavedMessages extends BaseGuildRepository<SavedMessage> {
       .andWhere("deleted_at IS NULL")
       .andWhere("posted_at > DATE_SUB(NOW(), INTERVAL :duration SECOND)", { duration: Math.floor(duration / 1000) })
       .groupBy("channel_id")
-      .getRawMany()) as { channel_id: string; channel_data: string }[];
+      .getRawMany()) as { channel_id: string; channel_data: any[] }[];
 
     return asyncMap(results, async (data) => {
       return {
         channelId: data.channel_id,
-        messages: await this.processMultipleEntitiesFromDB(JSON.parse(data.channel_data)),
+        messages: await this.processMultipleEntitiesFromDB(data.channel_data),
       };
     });
   }
